@@ -431,7 +431,7 @@ enabled = true
 
 # ---------------------------------------------------------------------------
 # Staging: creocards-staging (eu-west-3). Instrukcja: docs/WDROZENIE-STAGING.md
-# Przed `npx supabase config push` ustaw w powłoce: STAGING_SITE_URL, SMTP_PASS, SMTP_ADMIN_EMAIL.
+# Przed `npx supabase config push` ustaw w powłoce: STAGING_SITE_URL.
 # ---------------------------------------------------------------------------
 [remotes.staging]
 project_id = "pjbrssmrjzyrnbmjbamp"
@@ -441,14 +441,23 @@ site_url = "env(STAGING_SITE_URL)"
 additional_redirect_urls = ["env(STAGING_SITE_URL)/**"]
 enable_signup = false
 
-[remotes.staging.auth.rate_limit]
-email_sent = 30
-
+# SMTP wyłączony do czasu weryfikacji domeny mail.studiocreotarnow.pl w Resend.
+# Do tego czasu e-maile wysyła wbudowana poczta Supabase (tylko na adresy członków
+# zespołu projektu, kilka na godzinę), a uczennice zaprasza się linkiem z sekcji Zespół.
 [remotes.staging.auth.email.smtp]
-enabled = true
-host = "smtp.resend.com"
-port = 465
-user = "resend"
-pass = "env(SMTP_PASS)"
-admin_email = "env(SMTP_ADMIN_EMAIL)"
-sender_name = "CreoCards"
+enabled = false
+
+# Włączenie Resend (wymagane przed pilotażem) – zamień blok powyżej na poniższy
+# i odkomentuj limit; przed `config push` ustaw SMTP_PASS i SMTP_ADMIN_EMAIL:
+#
+# [remotes.staging.auth.email.smtp]
+# enabled = true
+# host = "smtp.resend.com"
+# port = 465
+# user = "resend"
+# pass = "env(SMTP_PASS)"
+# admin_email = "env(SMTP_ADMIN_EMAIL)"
+# sender_name = "CreoCards"
+#
+# [remotes.staging.auth.rate_limit]
+# email_sent = 30

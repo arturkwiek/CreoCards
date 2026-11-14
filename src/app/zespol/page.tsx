@@ -5,8 +5,9 @@ import { SubmitButton } from "@/components/ui";
 import { requireOwner } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { ROLE_LABELS } from "@/lib/validation";
-import { cancelInvitation, deactivateMember, reactivateMember } from "./actions";
+import { deactivateMember, reactivateMember } from "./actions";
 import { InviteForm } from "./invite-form";
+import { PendingInvitationActions } from "./pending-invitation-actions";
 
 export const metadata: Metadata = { title: "Zespół – CreoCards" };
 
@@ -29,6 +30,11 @@ async function TeamContent() {
 
   return (
     <>
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">Zaproś osobę</h2>
+        <InviteForm />
+      </section>
+
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Osoby</h2>
         <ul className="flex flex-col gap-2">
@@ -75,10 +81,7 @@ async function TeamContent() {
                     {inv.full_name ? ` · ${inv.email}` : ""}
                   </p>
                 </div>
-                <form action={cancelInvitation}>
-                  <input type="hidden" name="id" value={inv.id} />
-                  <SubmitButton variant="secondary">Anuluj zaproszenie</SubmitButton>
-                </form>
+                <PendingInvitationActions id={inv.id} />
               </li>
             ))}
           </ul>
@@ -97,11 +100,6 @@ export default function TeamPage() {
           Wróć
         </Link>
       </div>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Zaproś osobę</h2>
-        <InviteForm />
-      </section>
 
       <Suspense fallback={<p className="text-foreground/60">Ładowanie…</p>}>
         <TeamContent />
