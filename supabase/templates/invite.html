@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="pl">
+  <body style="font-family: Arial, Helvetica, sans-serif; color: #171717; max-width: 480px; margin: 0 auto; padding: 24px">
+    <h2 style="color: #7c2d5b; margin-top: 0">Zaproszenie do CreoCards</h2>
+    <p>Zostałaś zaproszona do zespołu studia Creo w aplikacji CreoCards.</p>
+    <p>Kliknij przycisk poniżej i ustaw swoje hasło:</p>
+    <p style="margin: 32px 0">
+      <a
+        href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite"
+        style="background: #7c2d5b; color: #ffffff; padding: 14px 24px; border-radius: 10px; text-decoration: none; font-weight: bold"
+        >Przyjmij zaproszenie</a
+      >
+    </p>
+    <p style="font-size: 13px; color: #555">
+      Link jest jednorazowy i wygasa po 24 godzinach. Jeśli nie spodziewasz się tego zaproszenia, zignoruj tę wiadomość.
+    </p>
+  </body>
+</html>

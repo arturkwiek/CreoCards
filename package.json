@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "bootstrap": "node --env-file=.env.local scripts/bootstrap.mjs",
+    "db:types": "supabase gen types typescript --local --schema public > src/lib/supabase/database.types.ts",
+    "db:test": "supabase test db"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
