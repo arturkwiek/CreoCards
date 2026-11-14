@@ -1,15 +1,15 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import type { FormState } from "@/lib/auth/actions";
 import { FormMessage, SubmitButton, TextField } from "@/components/ui";
 import { ROLE_LABELS, type UserRole } from "@/lib/validation";
-import { inviteMember } from "./actions";
+import { inviteMember, type InviteState } from "./actions";
+import { InviteLinkBox } from "./invite-link-box";
 
 const ROLES: UserRole[] = ["apprentice", "owner"];
 
 export function InviteForm() {
-  const [state, action] = useActionState<FormState, FormData>(inviteMember, {});
+  const [state, action] = useActionState<InviteState, FormData>(inviteMember, {});
   const [role, setRole] = useState<UserRole>("apprentice");
 
   return (
@@ -48,7 +48,14 @@ export function InviteForm() {
       </fieldset>
 
       <FormMessage error={state.error} success={state.success} />
-      <SubmitButton pendingText="Wysyłanie…">Wyślij zaproszenie</SubmitButton>
+      {state.link && <InviteLinkBox link={state.link} />}
+
+      <SubmitButton name="delivery" value="email" pendingText="Wysyłanie…">
+        Wyślij zaproszenie e-mailem
+      </SubmitButton>
+      <SubmitButton name="delivery" value="link" variant="secondary" pendingText="Tworzenie linku…">
+        Utwórz link zaproszenia
+      </SubmitButton>
     </form>
   );
 }

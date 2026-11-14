@@ -1,60 +1,52 @@
-# Wdrożenie na staging: Supabase, SMTP (Resend), Vercel
+# Wdrożenie na staging: Supabase, Vercel, e-maile
 
-Projekt Supabase: **creocards-staging** (region eu-west-3, Paryż).
+Projekt Supabase: **creocards-staging** (`pjbrssmrjzyrnbmjbamp`, region eu-west-3, Paryż).
 Wszystkie polecenia uruchamiaj w **WSL** w katalogu repozytorium.
 
-## 1. Resend – własny SMTP dla e-maili zaproszeń i resetu hasła
+## Stan obecny: bez własnego SMTP
 
-Wbudowany serwer pocztowy Supabase wysyła tylko kilka maili na godzinę i tylko do członków zespołu projektu, więc nie nadaje się do zaproszeń.
+Dopóki domena wysyłkowa **mail.studiocreotarnow.pl** nie jest zweryfikowana w Resend, staging działa **bez własnego SMTP**:
 
-1. Załóż konto na [resend.com](https://resend.com). Wybierz region UE, jeśli Resend o niego zapyta.
-2. **Domains → Add Domain**. Podaj domenę lub subdomenę, z której będą wychodzić maile, np. `mail.twojadomena.pl`.
-3. Dodaj u swojego dostawcy DNS rekordy, które pokaże Resend (SPF, DKIM, opcjonalnie DMARC). Poczekaj, aż status zmieni się na **Verified**.
-   - Bez zweryfikowanej domeny Resend wysyła tylko na Twój własny adres, więc zaproszenia do uczennic nie dojdą.
-4. **API Keys → Create API Key**: uprawnienie *Sending access*, ograniczone do tej domeny. Skopiuj klucz `re_…`. To jest hasło SMTP.
-5. Dane SMTP:
+- E-maile (zaproszenia, reset hasła) wysyła wbudowana poczta Supabase. Dociera ona tylko na adresy członków zespołu projektu Supabase i wysyła kilka maili na godzinę. Wystarczy do testu z Twoim adresem.
+- Uczennice zapraszasz **linkiem**:
+  - w sekcji **Zespół** przycisk „Utwórz link zaproszenia”;
+  - przy oczekującym zaproszeniu przycisk „Kopiuj link zaproszenia”.
+- Link jest jednorazowy, ważny 24 godziny i działa tylko dla tej osoby. Przekaż go bezpośrednio, np. SMS-em. Każdy nowy link unieważnia poprzedni.
 
-   | Pole | Wartość |
-   |---|---|
-   | Host | `smtp.resend.com` |
-   | Port | `465` |
-   | Użytkownik | `resend` |
-   | Hasło | klucz API `re_…` |
-   | Nadawca | np. `noreply@mail.twojadomena.pl` (adres w zweryfikowanej domenie) |
-   | Nazwa nadawcy | `CreoCards` |
+> Własny SMTP z domeną **mail.studiocreotarnow.pl** jest **wymagany przed pilotażem** (patrz `docs/SPEC.md`, `docs/ROADMAP.md`). Konfiguracja opisana jest w sekcji 6.
 
-## 2. Konfiguracja Auth w repozytorium (`supabase/config.toml`)
+## 1. Konfiguracja Auth w repozytorium (`supabase/config.toml`)
 
-Szablony e-maili, wyłączona rejestracja, minimalna długość hasła i SMTP są zapisane w `supabase/config.toml` i wysyłane na projekt poleceniem `supabase config push`, bez ręcznych zmian w panelu.
+Szablony e-maili, wyłączona rejestracja i minimalna długość hasła są zapisane w `supabase/config.toml` i wysyłane na projekt poleceniem `supabase config push`, bez ręcznych zmian w panelu.
 
-Ustawienia tylko dla stagingu są w bloku `[remotes.staging]` na końcu `supabase/config.toml` (Project ref `pjbrssmrjzyrnbmjbamp`). Obejmują one: `site_url`, dozwolone przekierowania, wyłączoną rejestrację, limit e-maili i SMTP Resend. Wartości `env(...)` CLI odczytuje z powłoki w chwili `config push`.
+Ustawienia tylko dla stagingu są w bloku `[remotes.staging]` na końcu pliku:
+- `site_url` i dozwolone przekierowania (z `env(STAGING_SITE_URL)`);
+- `enable_signup = false`;
+- SMTP **wyłączony** (`enabled = false`). Gotowy blok Resend czeka obok w komentarzu.
 
 > Jeśli `STAGING_SITE_URL` nie będzie ustawiony, linki w e-mailach będą błędne. Przed `config push` sprawdź: `echo $STAGING_SITE_URL`.
 
-## 3. Wysłanie konfiguracji i migracji na staging
+## 2. Wysłanie konfiguracji i migracji na staging
 
 ```bash
-npx supabase login                              # jednorazowo, otwiera przeglądarkę
+npx supabase login                                     # jednorazowo, otwiera przeglądarkę
 npx supabase link --project-ref pjbrssmrjzyrnbmjbamp   # hasło bazy: Project Settings → Database
 
-export STAGING_SITE_URL="https://<stały-adres-stagingu>.vercel.app"   # bez ukośnika na końcu
-export SMTP_ADMIN_EMAIL="noreply@mail.twojadomena.pl"
-read -rs SMTP_PASS && export SMTP_PASS          # wklej klucz re_… (nie zapisze się w historii)
+export STAGING_SITE_URL="https://<główny-adres>.vercel.app"   # bez ukośnika na końcu
 
-npx supabase config push                        # Auth: szablony, SMTP, site_url, enable_signup=false
-npx supabase db push                            # migracje z supabase/migrations
+npx supabase config push                               # Auth: szablony, site_url, enable_signup=false
+npx supabase db push                                   # migracje z supabase/migrations
 ```
 
 Sprawdź w panelu Supabase:
-- **Authentication → Emails → SMTP Settings**: włączone, host `smtp.resend.com`;
 - **Authentication → Sign In / Providers**: „Allow new users to sign up” wyłączone;
-- **Authentication → URL Configuration**: Site URL = adres stagingu.
+- **Authentication → URL Configuration**: Site URL = adres aplikacji.
 
-Zaproszenia działają mimo wyłączonej rejestracji, bo wysyła je serwer przez admin API (klucz service_role).
+Zaproszenia działają mimo wyłączonej rejestracji, bo tworzy je serwer przez admin API (klucz service_role).
 
-## 4. Vercel
+## 3. Vercel
 
-**Settings → Environment Variables**, środowisko **Preview** (staging):
+**Settings → Environment Variables** dla środowiska, które serwuje główny adres. Po merge do `master` jest to zwykle **Production** w Vercel. Do czasu założenia produkcji Supabase zmienne wskazują na staging:
 
 | Zmienna | Skąd |
 |---|---|
@@ -62,19 +54,58 @@ Zaproszenia działają mimo wyłączonej rejestracji, bo wysyła je serwer przez
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API → anon public |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API → service_role (**tajny**) |
 
-`STAGING_SITE_URL` powinien być stałym adresem, np. aliasem gałęzi `master` w Vercel (Settings → Domains), a nie adresem pojedynczego deploymentu.
+Po zmianie zmiennych zrób **Redeploy**.
 
-## 5. Pierwsza właścicielka
+## 4. Pierwsza właścicielka
 
-W `.env.local` ustaw wartości stagingu (te same trzy zmienne co w Vercel), następnie:
+W `.env.local` ustaw wartości stagingu (te same trzy zmienne co w Vercel), następnie jedno z dwóch:
 
 ```bash
-npm run bootstrap -- --salon "Creo" --email adres@wlascicielki.pl --name "Imię"
+# A) e-mail z zaproszeniem (wbudowana poczta – tylko na adres członka zespołu projektu Supabase)
+npm run bootstrap -- --salon "Creo" --email twoj@adres.pl --name "Imię"
+
+# B) link wypisany w terminalu, bez e-maila
+npm run bootstrap -- --salon "Creo" --email twoj@adres.pl --name "Imię" --link
+#    adres aplikacji z STAGING_SITE_URL albo: --site-url https://<główny-adres>.vercel.app
 ```
 
-Skrypt zakłada salon i wysyła zaproszenie. Po kliknięciu linku właścicielka ustawia hasło i może zapraszać uczennice w sekcji **Zespół**.
+Skrypt zakłada salon (lub używa istniejącego) i zaproszenie właścicielki. Ponowne uruchomienie tworzy nowy link lub e-mail dla tego samego zaproszenia. Po otwarciu linku właścicielka ustawia hasło i może zapraszać uczennice w sekcji **Zespół**.
 
-## Lokalnie
+## 5. Kryteria akceptacji Etapu 1
+
+1. Właścicielka loguje się, a w sekcji **Zespół** tworzy link zaproszenia dla uczennicy.
+2. Uczennica otwiera link na swoim telefonie, ustawia hasło i loguje się.
+3. Bez zaproszenia nie da się założyć konta: w aplikacji nie ma rejestracji, a API zwraca `signup_disabled`.
+4. Test RLS przechodzi w CI (zadanie `db-test`).
+
+## 6. Przed pilotażem: SMTP Resend z domeną mail.studiocreotarnow.pl
+
+1. Załóż konto na [resend.com](https://resend.com) (region UE, jeśli jest do wyboru).
+2. **Domains → Add Domain**: `mail.studiocreotarnow.pl`.
+3. U dostawcy DNS domeny `studiocreotarnow.pl` dodaj rekordy pokazane przez Resend (SPF, DKIM, opcjonalnie DMARC). Poczekaj na status **Verified**.
+4. **API Keys → Create API Key**: uprawnienie *Sending access*, tylko ta domena. Klucz `re_…` jest hasłem SMTP.
+5. W `supabase/config.toml` zamień blok `[remotes.staging.auth.email.smtp]` z `enabled = false` na zakomentowany blok Resend znajdujący się pod nim. Odkomentuj też `[remotes.staging.auth.rate_limit]`. Zmianę zrób przez PR.
+6. Wyślij konfigurację:
+
+   ```bash
+   export STAGING_SITE_URL="https://<główny-adres>.vercel.app"
+   export SMTP_ADMIN_EMAIL="noreply@mail.studiocreotarnow.pl"
+   read -rs SMTP_PASS && export SMTP_PASS     # wklej klucz re_… (nie zapisze się w historii)
+   npx supabase config push
+   ```
+
+7. Sprawdź w panelu: **Authentication → Emails → SMTP Settings** jest włączone, host `smtp.resend.com`.
+
+| Pole SMTP | Wartość |
+|---|---|
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Użytkownik | `resend` |
+| Hasło | klucz API `re_…` |
+| Nadawca | `noreply@mail.studiocreotarnow.pl` |
+| Nazwa nadawcy | `CreoCards` |
+
+## Testy
 
 - Testy RLS uruchamia CI (zadanie `db-test`: `supabase start` + `supabase test db`).
 - Lokalnie (opcjonalnie): `npx supabase start` + `npm run db:test`. Wymaga Dockera z siecią bridge.

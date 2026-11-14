@@ -132,7 +132,8 @@ Jedna instancja aplikacji w chmurze (Vercel + Supabase); nikt nie przechowuje lo
 - Aplikacja dostępna pod własną domeną.
 - Instalacja na telefonie: otwarcie adresu w przeglądarce → logowanie → „Dodaj do ekranu głównego” (PWA).
 - Aktualizacje automatyczne: nowa wersja ładuje się przy kolejnym otwarciu aplikacji.
-- **Konta tylko z zaproszenia**: właścicielka zaprasza osoby e-mailem; publiczna rejestracja wyłączona.
+- **Konta tylko z zaproszenia**: właścicielka zaprasza osoby e-mailem lub jednorazowym linkiem zaproszenia (do przekazania np. SMS-em); publiczna rejestracja wyłączona.
+- **E-maile (zaproszenia, reset hasła)**: własny SMTP (Resend) z domeną wysyłkową `mail.studiocreotarnow.pl` – **wymagany przed pilotażem**. Do tego czasu na stagingu działa wbudowana poczta Supabase, a zaproszenia przekazuje się linkiem.
 - Utrata telefonu: wylogowanie wszystkich sesji i reset hasła z poziomu konta właścicielki.
 
 ## Wprowadzenie wbudowane w aplikację (MVP)

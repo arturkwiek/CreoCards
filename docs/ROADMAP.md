@@ -25,7 +25,7 @@ Jeden etap = jedno zadanie dla agenta = osobna gałąź i pull request. Kolejny 
 | 7. Szkice | Status Szkic/Zakończona, autozapis, zapis lokalny offline + synchronizacja, przypomnienie na koniec dnia | Wizyta zapisana w trybie samolotowym trafia na serwer po powrocie sieci |
 | 8. Magazyn | `stock_movements`, odejmowanie zużycia po zakończeniu wizyty, alert niskiego stanu, przyjęcie dostawy | Stan farby maleje o zużyte gramy; alert przy progu |
 | 9. Onboarding | Ekran powitalny, klientka testowa, lista startowa, podpowiedzi na pustych ekranach, dymki pierwszego użycia | Nowa osoba zapisuje pierwszą wizytę bez instrukcji |
-| 10. Pilotaż | Poprawki UX, wydajność, backupy, domena, dane startowe | Tydzień pracy salonu bez utraty danych |
+| 10. Pilotaż | Poprawki UX, wydajność, backupy, domena, dane startowe; **warunek wstępny: SMTP Resend z domeną `mail.studiocreotarnow.pl`** | Zaproszenie i reset hasła docierają e-mailem z `mail.studiocreotarnow.pl`; tydzień pracy salonu bez utraty danych |
 
 ## Przykładowe polecenie dla agenta
 
@@ -44,6 +44,7 @@ Jeden etap = jedno zadanie dla agenta = osobna gałąź i pull request. Kolejny 
 9. Testy każdego modułu na `staging` z danymi testowymi, w tym testy RLS.
 10. Automatyczne backupy na `production`; kopia przed pierwszym wdrożeniem.
 11. Własna domena w Vercel.
+    - Przed pilotażem: domena wysyłkowa `mail.studiocreotarnow.pl` zweryfikowana w Resend i SMTP włączony w `supabase/config.toml` (instrukcja: `docs/WDROZENIE-STAGING.md`, sekcja 6).
 12. Startowy katalog farb i utleniaczy (import z CSV).
 13. Zaproszenie uczennic i instalacja aplikacji na ich telefonach.
 14. Tydzień pilotażu: uwagi, poprawki na `staging`, wdrożenia na `production`.
