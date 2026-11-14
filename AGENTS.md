@@ -11,6 +11,11 @@
 - Hosting: Vercel. Transkrypcja: zewnętrzne API speech-to-text.
 - Język interfejsu: polski.
 
+## Środowisko deweloperskie
+- Środowisko dev to **WSL Ubuntu z Node 22 (nvm)**. Wszystkie polecenia `npm`, `npx`, `node` i Supabase CLI uruchamiaj w WSL (np. `wsl -e bash -lc 'source ~/.nvm/nvm.sh && npm ...'`), nigdy z Windowsa – `node_modules` zawiera binaria natywne dla Linuksa.
+- Końce linii: LF (wymusza `.gitattributes`). Nie zmieniaj tego.
+- Lokalna baza i testy RLS: `npx supabase start` + `npx supabase test db` (Docker w WSL).
+
 ## Baza danych – reguły bezwzględne
 1. Każda zmiana schematu wyłącznie jako plik migracji w `supabase/migrations/`. Żadnych ręcznych zmian w panelu Supabase.
 2. Migracje **tylko addytywne**: dodawanie tabel, kolumn, indeksów, polityk. Usunięcie, zmiana nazwy lub typu kolumny/tabeli – tylko po wyraźnej zgodzie w poleceniu.

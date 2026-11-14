@@ -12,6 +12,10 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      # Atrapy – build nie łączy się z Supabase.
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -23,3 +27,17 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  db-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lokalny Supabase – baza + Auth (schemat auth.users), migracje z supabase/migrations
+        run: npx supabase start -x realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+      - name: Testy RLS (pgTAP)
+        run: npx supabase test db
