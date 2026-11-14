@@ -12,5 +12,25 @@ Aplikacja dla studia fryzur **Creo**: kartoteka klientek, historia wizyt i recep
 ## Stos
 Next.js + TypeScript + Tailwind (PWA), Supabase (PostgreSQL, Auth, Storage, region UE), Vercel.
 
+## Uruchomienie lokalne
+Wymagany Node.js 22.
+
+```bash
+npm install
+cp .env.example .env.local   # uzupełnij klucze projektu Supabase (staging)
+npm run dev                  # http://localhost:3000
+```
+
+| Polecenie | Opis |
+| --- | --- |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | Generowanie typów tras + `tsc --noEmit` |
+| `npm test` | Testy (Vitest) |
+| `npm run build` | Build produkcyjny |
+
+Service worker (`public/sw.js`) rejestruje się tylko w buildzie produkcyjnym (`npm run build && npm start`).
+
+Baza danych: zmiany wyłącznie jako migracje w `supabase/migrations/` (Supabase CLI: `npx supabase migration new <nazwa>`). Szczegóły w `AGENTS.md`.
+
 ## Status
-Etap 0 – przed implementacją. Kolejne kroki: `docs/ROADMAP.md`.
+Etap 0 – Fundament (szkielet, PWA, klient Supabase, CI). Kolejne kroki: `docs/ROADMAP.md`.
