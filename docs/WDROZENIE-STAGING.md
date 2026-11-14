@@ -27,37 +27,15 @@ Wbudowany serwer pocztowy Supabase wysyła tylko kilka maili na godzinę i tylko
 
 Szablony e-maili, wyłączona rejestracja, minimalna długość hasła i SMTP są zapisane w `supabase/config.toml` i wysyłane na projekt poleceniem `supabase config push`, bez ręcznych zmian w panelu.
 
-Ustawienia tylko dla stagingu trafiają do bloku `[remotes.staging]`. Supabase CLI wymaga w nim prawdziwego **Project ref**, który znajdziesz w adresie panelu: `https://supabase.com/dashboard/project/<ref>`. Ref nie jest tajny, ale bez niego plik się nie wczyta, dlatego blok trzeba dodać po jego poznaniu. Agent doda go po podaniu refu. Możesz też wkleić go sama na koniec `supabase/config.toml`:
+Ustawienia tylko dla stagingu są w bloku `[remotes.staging]` na końcu `supabase/config.toml` (Project ref `pjbrssmrjzyrnbmjbamp`). Obejmują one: `site_url`, dozwolone przekierowania, wyłączoną rejestrację, limit e-maili i SMTP Resend. Wartości `env(...)` CLI odczytuje z powłoki w chwili `config push`.
 
-```toml
-[remotes.staging]
-project_id = "<ref>"
-
-[remotes.staging.auth]
-site_url = "env(STAGING_SITE_URL)"
-additional_redirect_urls = ["env(STAGING_SITE_URL)/**"]
-enable_signup = false
-
-[remotes.staging.auth.rate_limit]
-email_sent = 30
-
-[remotes.staging.auth.email.smtp]
-enabled = true
-host = "smtp.resend.com"
-port = 465
-user = "resend"
-pass = "env(SMTP_PASS)"
-admin_email = "env(SMTP_ADMIN_EMAIL)"
-sender_name = "CreoCards"
-```
-
-> **Nie uruchamiaj `config push` bez tego bloku.** Bez niego na staging trafi lokalny `site_url` (`http://localhost:3000`) i linki w e-mailach będą prowadzić do localhosta.
+> Jeśli `STAGING_SITE_URL` nie będzie ustawiony, linki w e-mailach będą błędne. Przed `config push` sprawdź: `echo $STAGING_SITE_URL`.
 
 ## 3. Wysłanie konfiguracji i migracji na staging
 
 ```bash
 npx supabase login                              # jednorazowo, otwiera przeglądarkę
-npx supabase link --project-ref <ref>           # hasło bazy: Project Settings → Database
+npx supabase link --project-ref pjbrssmrjzyrnbmjbamp   # hasło bazy: Project Settings → Database
 
 export STAGING_SITE_URL="https://<stały-adres-stagingu>.vercel.app"   # bez ukośnika na końcu
 export SMTP_ADMIN_EMAIL="noreply@mail.twojadomena.pl"
@@ -98,5 +76,5 @@ Skrypt zakłada salon i wysyła zaproszenie. Po kliknięciu linku właścicielka
 
 ## Lokalnie
 
-- Testy RLS: `npx supabase start` + `npm run db:test`. Wymaga Dockera z siecią bridge.
-- Na obecnym WSL Docker ma `"bridge": "none"`, więc pełny `supabase start` nie ruszy. Testy RLS uruchamia CI (zadanie `db-test`).
+- Testy RLS uruchamia CI (zadanie `db-test`: `supabase start` + `supabase test db`).
+- Lokalnie (opcjonalnie): `npx supabase start` + `npm run db:test`. Wymaga Dockera z siecią bridge.
