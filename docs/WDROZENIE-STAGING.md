@@ -1,6 +1,7 @@
 # Wdrożenie na staging: Supabase, Vercel, e-maile
 
 Projekt Supabase: **creocards-staging** (`pjbrssmrjzyrnbmjbamp`, region eu-west-3, Paryż).
+Główny adres stagingu: **https://creo-cards.vercel.app**.
 Wszystkie polecenia uruchamiaj w **WSL** w katalogu repozytorium.
 
 ## Stan obecny: bez własnego SMTP
@@ -12,19 +13,24 @@ Dopóki domena wysyłkowa **mail.studiocreotarnow.pl** nie jest zweryfikowana w 
   - w sekcji **Zespół** przycisk „Utwórz link zaproszenia”;
   - przy oczekującym zaproszeniu przycisk „Kopiuj link zaproszenia”.
 - Link jest jednorazowy, ważny 24 godziny i działa tylko dla tej osoby. Przekaż go bezpośrednio, np. SMS-em. Każdy nowy link unieważnia poprzedni.
+- **Polskie szablony e-maili nie są wysyłane na projekt.** Plan Free z wbudowaną pocztą nie pozwala ich zmieniać (`400 entitlement_required … auth.email_templates`). Do czasu Resend maile z Supabase mają domyślną, angielską treść. Link w nich prowadzi przez serwer Supabase i może nie zalogować w aplikacji – do testu używaj linku z `bootstrap --link` lub z sekcji Zespół.
 
 > Własny SMTP z domeną **mail.studiocreotarnow.pl** jest **wymagany przed pilotażem** (patrz `docs/SPEC.md`, `docs/ROADMAP.md`). Konfiguracja opisana jest w sekcji 6.
 
 ## 1. Konfiguracja Auth w repozytorium (`supabase/config.toml`)
 
-Szablony e-maili, wyłączona rejestracja i minimalna długość hasła są zapisane w `supabase/config.toml` i wysyłane na projekt poleceniem `supabase config push`, bez ręcznych zmian w panelu.
+Wyłączona rejestracja, wymagania hasła i ważność linków są zapisane w `supabase/config.toml` i wysyłane na projekt poleceniem `supabase config push`, bez ręcznych zmian w panelu.
 
 Ustawienia tylko dla stagingu są w bloku `[remotes.staging]` na końcu pliku:
-- `site_url` i dozwolone przekierowania (z `env(STAGING_SITE_URL)`);
+- `site_url = "https://creo-cards.vercel.app"` i przekierowania `https://creo-cards.vercel.app/**` – wpisane na stałe (to nie sekret). CLI podstawia `env(...)` tylko wtedy, gdy cała wartość jest odwołaniem, więc `"env(X)/**"` trafiłoby na projekt dosłownie;
 - `enable_signup = false`;
-- SMTP **wyłączony** (`enabled = false`). Gotowy blok Resend czeka obok w komentarzu.
+- SMTP **wyłączony** (`enabled = false`). Gotowy blok Resend razem z szablonami e-maili czeka obok w komentarzu.
 
-> Jeśli `STAGING_SITE_URL` nie będzie ustawiony, linki w e-mailach będą błędne. Przed `config push` sprawdź: `echo $STAGING_SITE_URL`.
+Celowo **nie** są wysyłane:
+- szablony e-maili – wymagają własnego SMTP (sekcja 6);
+- `storage.vector` – CreoCards nie używa wektorów, w konfiguracji jest `enabled = false`, więc `config push` nie zmienia tego na projekcie.
+
+Przed wysłaniem zawsze przejrzyj diff, który pokazuje `config push`. Nie powinno w nim być `mailer_templates_*`, `mailer_subjects_*` ani `storage.vector`.
 
 ## 2. Wysłanie konfiguracji i migracji na staging
 
@@ -32,15 +38,16 @@ Ustawienia tylko dla stagingu są w bloku `[remotes.staging]` na końcu pliku:
 npx supabase login                                     # jednorazowo, otwiera przeglądarkę
 npx supabase link --project-ref pjbrssmrjzyrnbmjbamp   # hasło bazy: Project Settings → Database
 
-export STAGING_SITE_URL="https://<główny-adres>.vercel.app"   # bez ukośnika na końcu
-
-npx supabase config push                               # Auth: szablony, site_url, enable_signup=false
-npx supabase db push                                   # migracje z supabase/migrations
+npx supabase config push                               # Auth: site_url, przekierowania, enable_signup=false
+npx supabase db push --remote                          # migracje z supabase/migrations na powiązany projekt
 ```
+
+> Samo `npx supabase db push` w CLI 3.x celuje w **lokalny** stack. Na staging zawsze z `--remote`.
 
 Sprawdź w panelu Supabase:
 - **Authentication → Sign In / Providers**: „Allow new users to sign up” wyłączone;
-- **Authentication → URL Configuration**: Site URL = adres aplikacji.
+- **Authentication → URL Configuration**: Site URL = `https://creo-cards.vercel.app`, w Redirect URLs `https://creo-cards.vercel.app/**` (bez `env(`);
+- **Database → Migrations**: jest `20261114120000_konta_i_role`.
 
 Zaproszenia działają mimo wyłączonej rejestracji, bo tworzy je serwer przez admin API (klucz service_role).
 
@@ -61,12 +68,13 @@ Po zmianie zmiennych zrób **Redeploy**.
 W `.env.local` ustaw wartości stagingu (te same trzy zmienne co w Vercel), następnie jedno z dwóch:
 
 ```bash
-# A) e-mail z zaproszeniem (wbudowana poczta – tylko na adres członka zespołu projektu Supabase)
+# A) e-mail z zaproszeniem (wbudowana poczta – tylko na adres członka zespołu projektu Supabase;
+#    do czasu Resend domyślny, angielski szablon – zalecany wariant B)
 npm run bootstrap -- --salon "Creo" --email twoj@adres.pl --name "Imię"
 
 # B) link wypisany w terminalu, bez e-maila
 npm run bootstrap -- --salon "Creo" --email twoj@adres.pl --name "Imię" --link
-#    adres aplikacji z STAGING_SITE_URL albo: --site-url https://<główny-adres>.vercel.app
+#    link prowadzi na https://creo-cards.vercel.app (inny adres: --site-url https://…)
 ```
 
 Skrypt zakłada salon (lub używa istniejącego) i zaproszenie właścicielki. Ponowne uruchomienie tworzy nowy link lub e-mail dla tego samego zaproszenia. Po otwarciu linku właścicielka ustawia hasło i może zapraszać uczennice w sekcji **Zespół**.
@@ -84,17 +92,16 @@ Skrypt zakłada salon (lub używa istniejącego) i zaproszenie właścicielki. P
 2. **Domains → Add Domain**: `mail.studiocreotarnow.pl`.
 3. U dostawcy DNS domeny `studiocreotarnow.pl` dodaj rekordy pokazane przez Resend (SPF, DKIM, opcjonalnie DMARC). Poczekaj na status **Verified**.
 4. **API Keys → Create API Key**: uprawnienie *Sending access*, tylko ta domena. Klucz `re_…` jest hasłem SMTP.
-5. W `supabase/config.toml` zamień blok `[remotes.staging.auth.email.smtp]` z `enabled = false` na zakomentowany blok Resend znajdujący się pod nim. Odkomentuj też `[remotes.staging.auth.rate_limit]`. Zmianę zrób przez PR.
+5. W `supabase/config.toml` zamień blok `[remotes.staging.auth.email.smtp]` z `enabled = false` na zakomentowany blok Resend znajdujący się pod nim. Odkomentuj też `[remotes.staging.auth.rate_limit]` i oba bloki `[remotes.staging.auth.email.template.*]` (polskie szablony – z własnym SMTP plan Free pozwala je zmieniać). Zmianę zrób przez PR.
 6. Wyślij konfigurację:
 
    ```bash
-   export STAGING_SITE_URL="https://<główny-adres>.vercel.app"
    export SMTP_ADMIN_EMAIL="noreply@mail.studiocreotarnow.pl"
    read -rs SMTP_PASS && export SMTP_PASS     # wklej klucz re_… (nie zapisze się w historii)
    npx supabase config push
    ```
 
-7. Sprawdź w panelu: **Authentication → Emails → SMTP Settings** jest włączone, host `smtp.resend.com`.
+7. Sprawdź w panelu: **Authentication → Emails → SMTP Settings** jest włączone, host `smtp.resend.com`, a w **Templates** są polskie treści zaproszenia i resetu hasła.
 
 | Pole SMTP | Wartość |
 |---|---|
