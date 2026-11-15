@@ -206,6 +206,8 @@ Wdrożenie stagingu według [`WDROZENIE-STAGING.md`](WDROZENIE-STAGING.md):
 - Własna domena aplikacji, np. `app.studiocreotarnow.pl`.
 - Przekazanie roli właścicielki fryzjerce (**Kinga**) – konto testowe/założycielskie przestaje być właścicielem salonu.
 - Plan Vercel: Hobby jest niekomercyjny – przed użyciem w salonie Pro albo inny hosting.
+- Supabase Pro zamiast Free (Free usypia nieużywane projekty po 7 dniach); łączny koszt z Vercel Pro ok. 200 zł/mies.
+- Region funkcji Vercel przenieść do UE (domyślnie USA) – dane klientek przechodzą przez serwer aplikacji.
 
 ---
 
@@ -233,3 +235,82 @@ npm run bootstrap -- --salon "Creo" --email adres@przyklad.pl --name "Imię" --l
 - Po zmianie zmiennych w Vercel – **Redeploy**.
 - `db push` zawsze z `--remote`. Przed potwierdzeniem `config push` przejrzyj diff – nie powinno w nim być szablonów e-maili, dopóki nie ma SMTP.
 - Darmowy plan Supabase bez własnego SMTP nie pozwala zmieniać szablonów e-maili – wrócą razem z Resend.
+
+---
+
+## 9. Pełny stos technologiczny
+
+Prosta z wierzchu aplikacja stoi na zestawie narzędzi i praktyk typowym dla profesjonalnych produktów SaaS. Większość tej złożoności to jednorazowa konfiguracja – na co dzień działa sama.
+
+### 9.1 Aplikacja (to, co widzi użytkownik)
+- **Next.js 16** (Turbopack) – framework aplikacji webowej
+- **React** – budowa interfejsu
+- **TypeScript** (strict) – JavaScript z kontrolą typów
+- **Tailwind CSS** – wygląd i układ ekranów
+- **PWA** – manifest, ikony, service worker; instalacja na telefonie jak aplikacja natywna
+- **Server Actions** i **proxy** (dawne middleware) – logika serwerowa i pilnowanie zalogowania
+
+### 9.2 Dane i logowanie
+- **Supabase** – platforma zaplecza (backend-as-a-service), region UE (Paryż, eu-west-3)
+- **PostgreSQL** – relacyjna baza danych
+- **Supabase Auth** – konta, hasła, zaproszenia, blokowanie dezaktywowanych kont
+- **Supabase Storage** – zdjęcia (od Etapu 5)
+- **Row Level Security (RLS)** – reguły dostępu w samej bazie; salon widzi tylko swoje dane
+- **Triggery i funkcje SQL** (`SECURITY DEFINER`) – pilnowanie ról, audytu, miękkiego usuwania
+- **Migracje SQL** – wersjonowane zmiany struktury bazy
+- **Konfiguracja jako kod** – `supabase/config.toml` z blokami `[remotes.*]`, wysyłana `config push` po `config diff`
+- **Generowane typy TypeScript** ze schematu bazy
+
+### 9.3 Jakość i testy
+- **ESLint** – statyczna analiza kodu
+- **TypeScript typecheck** – błędy typów wykrywane przed uruchomieniem
+- **Vitest** – testy jednostkowe (walidacja, wyszukiwanie, przekierowania)
+- **pgTAP** – testy zabezpieczeń bazy (izolacja salonów, role, brak DELETE)
+- **Testy end-to-end** przepływów (zaproszenie → hasło → logowanie → dezaktywacja) na tymczasowym stosie
+
+### 9.4 Kod i współpraca
+- **Git** – kontrola wersji; `.gitattributes` z `eol=lf`
+- **GitHub** – repozytorium, pull requesty, squash merge
+- **GitHub CLI (`gh`)** – obsługa PR z terminala
+- **Workflow etapowy** – gałąź → PR → przegląd → akceptacja → merge
+
+### 9.5 CI/CD – automatyczna kontrola i wdrażanie
+- **GitHub Actions** – lint, typecheck, testy jednostkowe przy każdym PR
+- **Docker** w CI – zadanie `db-test` stawia lokalną kopię Supabase i uruchamia testy RLS
+- **Vercel** – automatyczny build i publikacja po każdym merge
+  - środowiska **Production** i **Preview** (osobny podgląd każdego PR)
+  - zmienne środowiskowe typu **Config** i **Secret**
+  - **Vercel CLI** – zmienne, logi, wdrożenia z terminala
+
+### 9.6 Środowisko pracy
+- **Windows + WSL** (Ubuntu 22.04)
+- **nvm + Node.js 22**
+- **npm** – zależności i skrypty (`dev`, `bootstrap`, `db:test`)
+- **Supabase CLI** – `login`, `link`, `config diff`, `config push`, `db push --remote`
+- **VS Code** – edytor
+- **`.env.local`** – lokalne klucze poza repozytorium
+
+### 9.7 Sztuczna inteligencja w procesie
+- **Claude Code (agent)** – kod, testy, infrastruktura; tryb auto z regułami
+- **Claude w czacie** – architektura, przegląd planów, diagnoza, prowadzenie krok po kroku
+- **AGENTS.md** – reguły pracy agenta (bezpieczeństwo danych, uprawnienia do infrastruktury, WSL)
+
+### 9.8 Dokumentacja
+- `SPEC.md` (wymagania), `ROADMAP.md` (etapy i kryteria), `WDROZENIE-STAGING.md` (runbook), `PRZEWODNIK.md` (dla salonu), `PRZEBIEG-PROJEKTU.md` (historia i decyzje)
+- **Markdown** wersjonowany razem z kodem
+
+### 9.9 Bezpieczeństwo i prywatność
+- Dane w **UE** (RODO); alergie jako dane wrażliwe
+- Konta **tylko z zaproszenia**, publiczna rejestracja wyłączona
+- **Jednorazowe linki** z przyciskiem „Kontynuuj” (odporne na skanery poczty i podglądy w komunikatorach)
+- **Miękkie usuwanie** i pola audytu w każdym rekordzie
+- **Rozdział środowisk** – staging tylko z danymi testowymi; osobna produkcja przed pilotażem
+- Sekrety wyłącznie w zmiennych środowiskowych
+
+### 9.10 Zaplanowane (jeszcze nie wdrożone)
+- **Resend** (SMTP) z domeną `mail.studiocreotarnow.pl` i rekordami DNS (SPF, DKIM)
+- **API rozpoznawania mowy** (np. Whisper) – notatki głosowe
+- **Produkcyjny projekt Supabase** z backupami i Point-in-Time Recovery
+- **Własna domena** aplikacji (`app.studiocreotarnow.pl`)
+- **Region funkcji Vercel w UE** (np. Frankfurt) przed produkcją
+- **Płatne plany** do użytku komercyjnego: Vercel Pro (ok. 20 USD/mies.), Supabase Pro (ok. 25 USD/mies.) – łącznie ok. 200 zł/mies. na salon
