@@ -9,6 +9,8 @@ on:
   schedule:
     - cron: "15 1 * * *" # 02:15 czasu zimowego / 03:15 letniego w Polsce
   workflow_dispatch:
+  push: # TYMCZASOWO: pierwszy przebieg przed scaleniem (dispatch działa tylko z master)
+    branches: [feature/etap-4a-bezpieczenstwo]
 
 permissions:
   contents: read
