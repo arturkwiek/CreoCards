@@ -2,7 +2,7 @@
 
 Dokument dla osoby, która zna technologie webowe, ale nie robiła wcześniej takiego wdrożenia: aplikacji budowanej etapami przez agenta AI, z bazą Supabase, hostingiem Vercel i pracą w WSL. Opisuje **skąd przyszliśmy, gdzie jesteśmy i dokąd zmierzamy**, oraz dlaczego zapadły poszczególne decyzje.
 
-> Stan na: 15.11.2026 – Etap 1 scalony, trwa pierwsze wdrożenie stagingu (Vercel + Supabase).
+> Stan na: 15.11.2026 – **Etap 1 zaakceptowany** na stagingu (Vercel + Supabase). Następny: Etap 2 – Klientki (plan do akceptacji).
 
 ---
 
@@ -49,7 +49,7 @@ GitHub (master) ──────┘   push/merge = automatyczne wdrożenie
 | Środowisko | Gdzie | Status |
 |---|---|---|
 | **Lokalne** | WSL, `npm run dev` → `http://localhost:3000` (lub 3001) | działa |
-| **Staging** | Vercel (główny adres) + Supabase `creocards-staging` (`pjbrssmrjzyrnbmjbamp`, eu-west-3 Paryż) | w trakcie wdrażania |
+| **Staging** | Vercel (główny adres) + Supabase `creocards-staging` (`pjbrssmrjzyrnbmjbamp`, eu-west-3 Paryż) | wdrożony, Etap 1 zaakceptowany |
 | **Produkcja** | osobny projekt Supabase + docelowo `app.studiocreotarnow.pl` | przed pilotażem |
 
 Do czasu założenia produkcji **główny adres Vercel pełni rolę stagingu**.
@@ -114,14 +114,16 @@ Zasady bezpieczeństwa danych (pełna lista w `AGENTS.md`): migracje tylko dodaj
 Wdrożenie stagingu według [`WDROZENIE-STAGING.md`](WDROZENIE-STAGING.md):
 
 - [x] Konto Vercel (plan Hobby), repo podpięte, projekt `creo-cards` utworzony
-- [x] Zmienne w Vercel (Production; Preview – do dodania później) + **Redeploy**
+- [x] Zmienne w Vercel (Production i Preview, wszystkie gałęzie; `SUPABASE_SERVICE_ROLE_KEY` jako Secret) + **Redeploy** – build `master` zielony
 - [x] Główny adres Vercel: `https://creo-cards.vercel.app` (wpisany na stałe w `[remotes.staging]` w `config.toml`)
 - [x] `SUPABASE_SERVICE_ROLE_KEY` dopisany do `.env.local`
 - [x] W WSL: `npx supabase login` → `link` → `db push --remote` (migracja konta_i_role na stagingu)
-- [ ] Zmienne Supabase w Vercel także dla **Preview** (bez nich buildy podglądu PR padają)
-- [ ] `config push` po scaleniu PR #4 (szablony e-maili wyłączone do czasu SMTP – free tier ich nie pozwala zmieniać; adres stagingu na stałe zamiast env())
-- [ ] `npm run bootstrap -- --salon "Creo" --email … --name "…" --link`
-- [ ] Kryteria akceptacji Etapu 1 na telefonie (logowanie właścicielki, zaproszenie uczennicy linkiem, brak rejestracji, PWA na ekranie głównym)
+- [x] Vercel CLI w WSL połączone z projektem (`vercel link`, zespół `vision-rd`); stare zmienne Preview przypięte do gałęzi PR #4 usunięte
+- [x] `config push` po scaleniu PR #4 i #5 – wysłane tylko celowe zmiany (adres i przekierowania, `enable_signup = false`, hasło min. 8 znaków z literami i cyframi, linki ważne 24 h); `config diff` po pushu pusty. Szablony e-maili wyłączone do czasu SMTP
+- [x] `npm run bootstrap -- --salon "Creo" --email … --name "Artur" --link` – salon „Creo” założony, link zaproszenia właścicielki wygenerowany (15.11, ważny 24 h)
+- [x] Właścicielka otwiera link, ustawia hasło i loguje się
+- [x] Poprawki po teście (PR #7): „Utwórz link do ustawienia hasła” w Zespole, zaproszenia e-mailem i reset e-mailem ukryte do czasu SMTP (`AUTH_EMAILS_ENABLED`), zachęta do uzupełnienia imienia; dostęp kont zaproszonych e-mailem przywrócony
+- [x] **Kryteria akceptacji Etapu 1** na telefonie: właścicielka i uczennica zalogowane, uczennica nie zarządza zespołem, rejestracja wyłączona, PWA na ekranie głównym – **Etap 1 zaakceptowany (15.11)**
 
 ---
 
@@ -143,6 +145,7 @@ Wdrożenie stagingu według [`WDROZENIE-STAGING.md`](WDROZENIE-STAGING.md):
 - SMTP Resend z domeną `mail.studiocreotarnow.pl` (rekordy DNS u dostawcy domeny).
 - Projekt Supabase **produkcyjny** (UE) + backupy.
 - Własna domena aplikacji, np. `app.studiocreotarnow.pl`.
+- Przekazanie roli właścicielki fryzjerce (**Kinga**) – konto testowe/założycielskie przestaje być właścicielem salonu.
 - Plan Vercel: Hobby jest niekomercyjny – przed użyciem w salonie Pro albo inny hosting.
 
 ---
