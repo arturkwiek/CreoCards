@@ -5,7 +5,9 @@ import { SignOutButton } from "@/components/sign-out-button";
 import { buttonStyles } from "@/components/styles";
 import { LOGIN_PATH } from "@/lib/auth/paths";
 import { getSession } from "@/lib/auth/session";
+import { greeting, needsFullName } from "@/lib/profile/name";
 import { ROLE_LABELS } from "@/lib/validation";
+import { NamePrompt } from "./name-prompt";
 
 async function HomeContent() {
   const session = await getSession();
@@ -30,11 +32,11 @@ async function HomeContent() {
     <div className="flex flex-col gap-6">
       <div>
         <p className="text-sm text-foreground/60">{user.salonName}</p>
-        <h1 className="text-2xl font-semibold">
-          Cześć{user.fullName ? `, ${user.fullName}` : ""}!
-        </h1>
+        <h1 className="text-2xl font-semibold">{greeting(user.fullName)}</h1>
         <p className="text-sm text-foreground/60">{ROLE_LABELS[user.role]}</p>
       </div>
+
+      {needsFullName(user.fullName) && <NamePrompt />}
 
       <p className="rounded-xl bg-foreground/5 px-4 py-3 text-sm text-foreground/70">
         Klientki, wizyty i receptury pojawią się tu w kolejnych etapach.

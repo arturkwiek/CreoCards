@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import type { FormState } from "@/lib/auth/actions";
-import { buildInviteLink } from "@/lib/auth/invite-link";
+import type { PasswordLinkType } from "@/lib/auth/invite-link";
+import { createAuthLink, EMAIL_EXISTS_MESSAGE, type GenerateLink } from "@/lib/auth/password-link";
 import { requireOwner } from "@/lib/auth/session";
+import { isAuthEmailEnabled } from "@/lib/features";
 import { getRequestOrigin } from "@/lib/request-origin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -14,26 +16,20 @@ const BAN_FOREVER = "876000h";
 
 export type InviteState = FormState & { link?: string };
 
-const EMAIL_EXISTS_MESSAGE = "Ten adres ma już konto w CreoCards (np. w innym salonie).";
+/** generateLink z admin API (klucz service_role) – tylko po stronie serwera. */
+const generateLink: GenerateLink = (type, email) => {
+  const admin = createAdminClient().auth.admin;
+  return type === "invite"
+    ? admin.generateLink({ type: "invite", email })
+    : admin.generateLink({ type: "recovery", email });
+};
 
 /**
- * Jednorazowy link zaproszenia (bez wysyłania e-maila). Tworzy konto Auth, jeśli jeszcze
- * nie istnieje; każdy nowy link unieważnia poprzedni. Wywoływać tylko po requireOwner().
+ * Jednorazowy link (zaproszenie albo ustawienie hasła) bez wysyłania e-maila.
+ * Zaproszenie tworzy konto Auth, jeśli jeszcze nie istnieje. Wywoływać tylko po requireOwner().
  */
-async function generateInviteLink(email: string): Promise<{ link?: string; error?: string }> {
-  const { data, error } = await createAdminClient().auth.admin.generateLink({
-    type: "invite",
-    email,
-  });
-  if (error || !data?.properties?.hashed_token) {
-    return {
-      error:
-        error?.code === "email_exists"
-          ? EMAIL_EXISTS_MESSAGE
-          : "Nie udało się utworzyć linku zaproszenia.",
-    };
-  }
-  return { link: buildInviteLink(await getRequestOrigin(), data.properties.hashed_token) };
+async function generateAuthLink(email: string, type: PasswordLinkType) {
+  return createAuthLink(generateLink, await getRequestOrigin(), email, type);
 }
 
 /**
@@ -47,7 +43,8 @@ export async function inviteMember(_prev: InviteState, formData: FormData): Prom
   const email = normalizeEmail(formData.get("email"));
   const role = parseRole(formData.get("role"));
   const fullName = formString(formData, "full_name").trim().slice(0, 120);
-  const byLink = formString(formData, "delivery") === "link";
+  // Bez własnego SMTP e-mail nie dociera – wtedy zawsze link (także przy spreparowanym formularzu).
+  const byLink = formString(formData, "delivery") === "link" || !isAuthEmailEnabled();
   if (!isValidEmail(email)) return { error: "Podaj poprawny adres e-mail." };
   if (!role) return { error: "Wybierz rolę." };
 
@@ -58,7 +55,12 @@ export async function inviteMember(_prev: InviteState, formData: FormData): Prom
     .select("id")
     .eq("email", email)
     .maybeSingle();
-  if (existing) return { error: "Ta osoba ma już konto w salonie." };
+  if (existing) {
+    return {
+      error:
+        "Ta osoba ma już konto w salonie – użyj „Utwórz link do ustawienia hasła” przy jej nazwisku na liście poniżej.",
+    };
+  }
 
   const { data: invitation, error: insertError } = await supabase
     .from("invitations")
@@ -77,7 +79,7 @@ export async function inviteMember(_prev: InviteState, formData: FormData): Prom
 
   let result: InviteState;
   if (byLink) {
-    const { link, error } = await generateInviteLink(email);
+    const { link, error } = await generateAuthLink(email, "invite");
     result = error ? { error } : { link, success: `Zaproszenie dla ${email} gotowe – przekaż link.` };
   } else {
     const { error } = await createAdminClient().auth.admin.inviteUserByEmail(email);
@@ -118,7 +120,30 @@ export async function createInviteLink(_prev: InviteState, formData: FormData): 
     .maybeSingle();
   if (!invitation) return { error: "Zaproszenie nie jest już aktywne." };
 
-  const { link, error } = await generateInviteLink(invitation.email);
+  const { link, error } = await generateAuthLink(invitation.email, "invite");
+  return error ? { error } : { link };
+}
+
+/**
+ * Link do ustawienia hasła dla aktywnej osoby z zespołu (np. zaproszenie e-mailem nie dotarło
+ * albo zapomniała hasła, a własnego SMTP jeszcze nie ma). Osobę wyszukuje RLS – tylko w salonie
+ * właścicielki. Dezaktywowanej osobie najpierw trzeba przywrócić dostęp.
+ */
+export async function createPasswordLink(_prev: InviteState, formData: FormData): Promise<InviteState> {
+  const owner = await requireOwner();
+  const id = formString(formData, "id");
+  if (!id || id === owner.id) return { error: "Nie można utworzyć linku dla tego konta." };
+
+  const supabase = await createClient();
+  const { data: member } = await supabase
+    .from("users")
+    .select("email")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!member) return { error: "Konto jest dezaktywowane albo nie należy do salonu." };
+
+  const { link, error } = await generateAuthLink(member.email, "recovery");
   return error ? { error } : { link };
 }
 
