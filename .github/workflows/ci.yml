@@ -41,3 +41,13 @@ jobs:
         run: npx supabase start -x realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - name: Testy RLS (pgTAP)
         run: npx supabase test db
+      - name: Test skryptów backupu (lokalna baza, klucz testowy, bez wysyłki)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq age postgresql-client >/dev/null
+          age-keygen -o "$RUNNER_TEMP/test.agekey" 2>/dev/null
+          mkdir -p "$RUNNER_TEMP/backup-out"
+          DB_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+          AGE_RECIPIENT="$(age-keygen -y "$RUNNER_TEMP/test.agekey")" \
+          BACKUP_PREFIX=ci BACKUP_SKIP_UPLOAD=1 BACKUP_OUT_DIR="$RUNNER_TEMP/backup-out" \
+            bash scripts/backup/backup.sh
+          bash scripts/backup/decrypt-backup.sh "$(ls "$RUNNER_TEMP"/backup-out/*.tar.gz.age)" "$RUNNER_TEMP/test.agekey" "$RUNNER_TEMP/restore"
