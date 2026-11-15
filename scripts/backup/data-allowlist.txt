@@ -1,0 +1,7 @@
+# Tabele spoza schematu public, których dane trafiają do kopii (schemat.tabela, po jednej w wierszu).
+# Schemat public jest kopiowany zawsze w całości. Reszta tabel Supabase (auth, storage, realtime…)
+# to dane wewnętrzne lub ulotne (sesje, tokeny, logi, multipart, wektory) – pomijane.
+auth.users
+auth.identities
+storage.buckets
+storage.objects

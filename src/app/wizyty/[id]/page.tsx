@@ -66,7 +66,14 @@ async function VisitContent({ params }: { params: PageProps<"/wizyty/[id]">["par
           Edytuj wizytę
         </Link>
       )}
-      {user.role === "owner" && <DeleteVisitButton id={visit.id} />}
+      {user.role === "owner" && (
+        <>
+          <Link href={`/wizyty/${visit.id}/historia`} className={buttonStyles.secondary}>
+            Historia zmian
+          </Link>
+          <DeleteVisitButton id={visit.id} />
+        </>
+      )}
     </>
   );
 }

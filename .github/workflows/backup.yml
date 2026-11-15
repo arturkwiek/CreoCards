@@ -1,0 +1,49 @@
+name: Backup
+
+# Nocny, zaszyfrowany backup poza Supabase (docs/PRZYWRACANIE.md).
+# Baza: role + schemat + dane (także konta auth) → age → Backblaze B2 (UE), retencja 30 dni w buckecie.
+# Pliki Storage: osobny krok (pomijany, dopóki nie ma bucketów).
+# Nieudany przebieg = czerwony status i powiadomienie GitHub e-mailem.
+
+on:
+  schedule:
+    - cron: "15 1 * * *" # 02:15 czasu zimowego / 03:15 letniego w Polsce
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-staging
+  cancel-in-progress: false
+
+jobs:
+  staging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BACKUP_PREFIX: staging
+      DB_URL: ${{ secrets.STAGING_DB_URL }}
+      AGE_RECIPIENT: ${{ vars.AGE_RECIPIENT }}
+      B2_KEY_ID: ${{ secrets.B2_KEY_ID }}
+      B2_APPLICATION_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+      B2_BUCKET: ${{ vars.B2_BUCKET }}
+      B2_ENDPOINT: ${{ vars.B2_ENDPOINT }}
+      STORAGE_S3_ENDPOINT: ${{ secrets.STAGING_STORAGE_S3_ENDPOINT }}
+      STORAGE_S3_KEY_ID: ${{ secrets.STAGING_STORAGE_S3_KEY_ID }}
+      STORAGE_S3_SECRET: ${{ secrets.STAGING_STORAGE_S3_SECRET }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Narzędzia (age, rclone, psql)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age rclone postgresql-client >/dev/null
+      - name: Baza
+        run: bash scripts/backup/backup.sh
+      - name: Pliki Storage
+        run: bash scripts/backup/storage-backup.sh

@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { visibleEmail } from "@/lib/auth/login";
 import { isUuid } from "@/lib/catalog/form";
 import { createClient } from "@/lib/supabase/server";
 import type { DraftMix, DraftRecipe } from "@/lib/visits/recipe";
@@ -140,8 +141,9 @@ export async function getLastRecipe(clientId: string, excludeVisitId?: string): 
 
 export const getTeamNames = cache(async (): Promise<Map<string, string>> => {
   const supabase = await createClient();
-  const { data } = await supabase.from("users").select("id, full_name, email");
-  return new Map((data ?? []).map((u) => [u.id, u.full_name || u.email]));
+  const { data } = await supabase.from("users").select("id, full_name, email, login");
+  // Adres techniczny konta bez e-maila nie jest pokazywany.
+  return new Map((data ?? []).map((u) => [u.id, u.full_name || u.login || visibleEmail(u.email)]));
 });
 
 /** Ile razy produkt użyto w recepturach salonu. */
