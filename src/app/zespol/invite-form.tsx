@@ -8,7 +8,8 @@ import { InviteLinkBox } from "./invite-link-box";
 
 const ROLES: UserRole[] = ["apprentice", "owner"];
 
-export function InviteForm() {
+/** emailEnabled = false (brak własnego SMTP): tylko link zaproszenia. */
+export function InviteForm({ emailEnabled }: { emailEnabled: boolean }) {
   const [state, action] = useActionState<InviteState, FormData>(inviteMember, {});
   const [role, setRole] = useState<UserRole>("apprentice");
 
@@ -50,10 +51,17 @@ export function InviteForm() {
       <FormMessage error={state.error} success={state.success} />
       {state.link && <InviteLinkBox link={state.link} />}
 
-      <SubmitButton name="delivery" value="email" pendingText="Wysyłanie…">
-        Wyślij zaproszenie e-mailem
-      </SubmitButton>
-      <SubmitButton name="delivery" value="link" variant="secondary" pendingText="Tworzenie linku…">
+      {emailEnabled && (
+        <SubmitButton name="delivery" value="email" pendingText="Wysyłanie…">
+          Wyślij zaproszenie e-mailem
+        </SubmitButton>
+      )}
+      <SubmitButton
+        name="delivery"
+        value="link"
+        variant={emailEnabled ? "secondary" : "primary"}
+        pendingText="Tworzenie linku…"
+      >
         Utwórz link zaproszenia
       </SubmitButton>
     </form>

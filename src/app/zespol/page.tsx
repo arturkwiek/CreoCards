@@ -3,10 +3,12 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { SubmitButton } from "@/components/ui";
 import { requireOwner } from "@/lib/auth/session";
+import { isAuthEmailEnabled } from "@/lib/features";
 import { createClient } from "@/lib/supabase/server";
 import { ROLE_LABELS } from "@/lib/validation";
 import { deactivateMember, reactivateMember } from "./actions";
 import { InviteForm } from "./invite-form";
+import { MemberPasswordLink } from "./member-password-link";
 import { PendingInvitationActions } from "./pending-invitation-actions";
 
 export const metadata: Metadata = { title: "Zespół – CreoCards" };
@@ -32,7 +34,7 @@ async function TeamContent() {
     <>
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Zaproś osobę</h2>
-        <InviteForm />
+        <InviteForm emailEnabled={isAuthEmailEnabled()} />
       </section>
 
       <section className="flex flex-col gap-3">
@@ -47,6 +49,9 @@ async function TeamContent() {
               >
                 <div>
                   <p className="font-medium">{m.full_name || m.email}</p>
+                  {!m.full_name && (
+                    <p className="text-sm text-foreground/60">Imię nieuzupełnione</p>
+                  )}
                   <p className="text-sm text-foreground/60">
                     {ROLE_LABELS[m.role]}
                     {inactive ? " · dezaktywowane" : ""}
@@ -54,6 +59,7 @@ async function TeamContent() {
                   </p>
                   {m.full_name && <p className="text-sm text-foreground/60">{m.email}</p>}
                 </div>
+                {m.id !== owner.id && !inactive && <MemberPasswordLink id={m.id} />}
                 {m.id !== owner.id && (
                   <form action={inactive ? reactivateMember : deactivateMember}>
                     <input type="hidden" name="id" value={m.id} />
