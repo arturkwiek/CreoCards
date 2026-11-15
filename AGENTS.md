@@ -16,6 +16,16 @@
 - Końce linii: LF (wymusza `.gitattributes`). Nie zmieniaj tego.
 - Lokalna baza i testy RLS: `npx supabase start` + `npx supabase test db` (Docker w WSL).
 
+## Uprawnienia do infrastruktury
+- **Staging – działasz samodzielnie:** Supabase `creocards-staging` (`pjbrssmrjzyrnbmjbamp`: `config diff`/`config push`, `db push --remote`, bootstrap) oraz Vercel `creo-cards` (zespół `vision-rd`) – środowiska Preview i Production, dopóki Production w Vercel pełni rolę stagingu (do czasu założenia prawdziwej produkcji): zmienne środowiskowe, redeploy, logi.
+- **Zawsze pytasz przed:**
+  - jakąkolwiek zmianą na przyszłej produkcji (osobny projekt Supabase, docelowa domena),
+  - usuwaniem czegokolwiek (zmienne, projekty, wdrożenia, dane, użytkownicy, gałęzie poza scalonymi przez Ciebie PR),
+  - zmianą planów płatnych (Supabase, Vercel, Resend),
+  - rotacją kluczy i haseł.
+- **Sekretów nigdy nie wypisujesz** – ani w terminalu, ani w logach, PR-ach czy rozmowie. Wartości przekazuj przez stdin lub pliki (np. z `.env.local`), nie w argumentach poleceń; klucz `service_role` w Vercel jako sensitive.
+- Przed `config push` zawsze uruchom `npx supabase config diff` i pokaż diff, jeśli zawiera coś poza celowymi zmianami.
+
 ## Baza danych – reguły bezwzględne
 1. Każda zmiana schematu wyłącznie jako plik migracji w `supabase/migrations/`. Żadnych ręcznych zmian w panelu Supabase.
 2. Migracje **tylko addytywne**: dodawanie tabel, kolumn, indeksów, polityk. Usunięcie, zmiana nazwy lub typu kolumny/tabeli – tylko po wyraźnej zgodzie w poleceniu.
