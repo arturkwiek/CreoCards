@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { buttonStyles } from "@/components/styles";
 import { requireUser } from "@/lib/auth/session";
 import { CatalogList } from "./catalog-list";
+import { getUsage } from "../wizyty/data";
 import { countOpenRequests, getProducts } from "./data";
 
 export const metadata: Metadata = { title: "Katalog – CreoCards" };
@@ -11,10 +12,16 @@ export const metadata: Metadata = { title: "Katalog – CreoCards" };
 async function CatalogContent() {
   const user = await requireUser();
   const isOwner = user.role === "owner";
-  const [products, openRequests] = await Promise.all([
+  const [products, openRequests, usage] = await Promise.all([
     getProducts(isOwner),
     isOwner ? countOpenRequests() : Promise.resolve(0),
+    getUsage(),
   ]);
+  // „Najczęściej używane na górze” – ranking z receptur.
+  const topIds = [...usage.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([id]) => id);
 
   return (
     <>
@@ -29,7 +36,7 @@ async function CatalogContent() {
         </div>
       )}
 
-      <CatalogList products={products} isOwner={isOwner} />
+      <CatalogList products={products} isOwner={isOwner} topIds={topIds} />
 
       {/* Pod kciukiem: główna akcja przyklejona do dołu ekranu. */}
       <div className="fixed inset-x-0 bottom-0 bg-gradient-to-t from-background via-background to-transparent px-5 pb-5 pt-6">

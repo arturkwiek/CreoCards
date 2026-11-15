@@ -34,12 +34,23 @@ function details(p: CatalogProduct, showPrice: boolean): string {
  * Katalog z wyszukiwarką (w przeglądarce): „7.1” pokazuje pasujące odcienie, słowa – markę i linię.
  * Bez frazy – grupy marka/linia; z frazą – najlepsze dopasowania na górze.
  */
-export function CatalogList({ products, isOwner }: { products: CatalogProduct[]; isOwner: boolean }) {
+export function CatalogList({
+  products,
+  isOwner,
+  topIds = [],
+}: {
+  products: CatalogProduct[];
+  isOwner: boolean;
+  /** Najczęściej używane w recepturach (od najczęstszego). */
+  topIds?: string[];
+}) {
   const [query, setQuery] = useState("");
   const [type, setType] = useState<ProductType | null>(null);
   const results = useMemo(() => filterProducts(products, query, type), [products, query, type]);
   const searching = query.trim() !== "";
   const presentTypes = PRODUCT_TYPES.filter((t) => products.some((p) => p.type === t));
+  const byId = new Map(products.map((p) => [p.id, p]));
+  const top = searching || type ? [] : topIds.flatMap((id) => byId.get(id) ?? []);
 
   if (products.length === 0) {
     return (
@@ -88,6 +99,23 @@ export function CatalogList({ products, isOwner }: { products: CatalogProduct[];
             </button>
           ))}
         </div>
+      )}
+
+      {top.length > 0 && (
+        <section aria-label="Najczęściej używane" className="flex flex-col gap-1">
+          <p className="px-1 pt-2 text-sm font-semibold text-foreground/70">Najczęściej używane</p>
+          <div className="flex flex-wrap gap-2">
+            {top.map((p) => (
+              <Link
+                key={p.id}
+                href={`/katalog/produkt/${p.id}`}
+                className="rounded-xl border border-foreground/15 px-3 py-2 text-sm active:bg-foreground/5"
+              >
+                <b>{p.shade}</b> <span className="text-foreground/60">{p.brand}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
 
       {results.length === 0 ? (

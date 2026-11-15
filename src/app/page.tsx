@@ -60,13 +60,18 @@ async function HomeContent() {
       </Link>
 
       <p className="rounded-xl bg-foreground/5 px-4 py-3 text-sm text-foreground/70">
-        Wizyty i receptury pojawią się tu w kolejnych etapach.
+        Wizytę i recepturę zapiszesz z karty klientki.
       </p>
 
       {user.role === "owner" && (
-        <Link href="/zespol" className={buttonStyles.secondary}>
-          Zespół i zaproszenia
-        </Link>
+        <>
+          <Link href="/uslugi" className={buttonStyles.secondary}>
+            Usługi
+          </Link>
+          <Link href="/zespol" className={buttonStyles.secondary}>
+            Zespół i zaproszenia
+          </Link>
+        </>
       )}
       <SignOutButton />
     </div>
