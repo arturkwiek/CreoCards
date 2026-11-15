@@ -16,6 +16,9 @@ export default function ForgotPasswordPage() {
             Podaj e-mail konta. Wyślemy link do ustawienia nowego hasła.
           </p>
           <ResetForm />
+          <p className="text-sm text-foreground/70">
+            Logujesz się loginem? Poproś właścicielkę salonu o link do ustawienia hasła (Zespół).
+          </p>
         </>
       ) : (
         <p className="rounded-xl bg-foreground/5 px-4 py-3 text-sm text-foreground/70">

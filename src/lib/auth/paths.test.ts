@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { authRedirect, isPublicPath } from "./paths";
+import { authRedirect, isPublicPath, mustChangePassword } from "./paths";
 
 describe("isPublicPath", () => {
   it("rozpoznaje ścieżki publiczne", () => {
@@ -28,5 +28,20 @@ describe("authRedirect", () => {
   it("zalogowana osoba nie widzi ekranu logowania", () => {
     expect(authRedirect("/logowanie", true)).toBe("/");
     expect(authRedirect("/zespol", true)).toBeNull();
+  });
+});
+
+describe("hasło tymczasowe", () => {
+  it("wymusza zmianę hasła – dostępny tylko ekran ustawienia hasła", () => {
+    expect(authRedirect("/", true, true)).toBe("/ustaw-haslo");
+    expect(authRedirect("/zespol", true, true)).toBe("/ustaw-haslo");
+    expect(authRedirect("/logowanie", true, true)).toBe("/ustaw-haslo");
+    expect(authRedirect("/ustaw-haslo", true, true)).toBeNull();
+  });
+  it("flaga tylko z app_metadata.must_change_password === true", () => {
+    expect(mustChangePassword({ must_change_password: true })).toBe(true);
+    expect(mustChangePassword({ must_change_password: false })).toBe(false);
+    expect(mustChangePassword({ must_change_password: "true" })).toBe(false);
+    expect(mustChangePassword(undefined)).toBe(false);
   });
 });

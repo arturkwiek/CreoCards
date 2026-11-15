@@ -87,6 +87,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          login: string | null
           role: Database["public"]["Enums"]["user_role"]
           salon_id: string
           updated_at: string
@@ -99,6 +100,7 @@ export type Database = {
           email: string
           full_name?: string
           id?: string
+          login?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           salon_id?: string
           updated_at?: string
@@ -111,6 +113,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          login?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           salon_id?: string
           updated_at?: string
@@ -124,6 +127,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      login_attempts: {
+        Row: {
+          attempted_at: string
+          id: number
+          ip_hash: string
+          login_hash: string
+          success: boolean
+        }
+        Insert: {
+          attempted_at?: string
+          id?: never
+          ip_hash: string
+          login_hash: string
+          success: boolean
+        }
+        Update: {
+          attempted_at?: string
+          id?: never
+          ip_hash?: string
+          login_hash?: string
+          success?: boolean
+        }
+        Relationships: []
       }
       mix_items: {
         Row: {
@@ -559,6 +586,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          login: string | null
           role: Database["public"]["Enums"]["user_role"]
           salon_id: string
           updated_at: string
@@ -570,6 +598,7 @@ export type Database = {
           email: string
           full_name?: string
           id: string
+          login?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           salon_id: string
           updated_at?: string
@@ -581,6 +610,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          login?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           salon_id?: string
           updated_at?: string
@@ -668,12 +698,20 @@ export type Database = {
       import_products: { Args: { items: Json }; Returns: Json }
       import_services: { Args: { items: Json }; Returns: Json }
       is_owner: { Args: never; Returns: boolean }
+      login_throttled: {
+        Args: { p_ip_hash: string; p_login_hash: string }
+        Returns: boolean
+      }
       product_usage: {
         Args: never
         Returns: {
           product_id: string
           uses: number
         }[]
+      }
+      record_login_attempt: {
+        Args: { p_ip_hash: string; p_login_hash: string; p_success: boolean }
+        Returns: undefined
       }
       save_recipe: {
         Args: { p_recipe: Json; p_visit_id: string }

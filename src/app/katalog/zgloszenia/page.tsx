@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { SubmitButton } from "@/components/ui";
+import { visibleEmail } from "@/lib/auth/login";
 import { requireOwner } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { resolveRequest } from "../actions";
@@ -23,11 +24,11 @@ async function RequestsContent() {
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(50),
-    supabase.from("users").select("id, full_name, email"),
+    supabase.from("users").select("id, full_name, email, login"),
     getProducts(false),
   ]);
 
-  const names = new Map((team ?? []).map((u) => [u.id, u.full_name || u.email]));
+  const names = new Map((team ?? []).map((u) => [u.id, u.full_name || u.login || visibleEmail(u.email)]));
   const productNames = new Map(products.map((p) => [p.id, productLabel(p)]));
   const open = (requests ?? []).filter((r) => r.resolved_at === null);
   const resolved = (requests ?? []).filter((r) => r.resolved_at !== null).slice(0, 10);
