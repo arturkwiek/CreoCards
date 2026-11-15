@@ -40,25 +40,7 @@ grep -q 'COPY "auth"."users"' "$DIR/data.sql" || fail "dane bez kont (auth.users
 grep -q 'COPY "public"."clients"' "$DIR/data.sql" || fail "dane bez tabeli clients"
 
 # Liczby wierszy – do porównania po przywróceniu (bez danych osobowych).
-psql "$DB_URL" -X -q -At -F $'\t' -v ON_ERROR_STOP=1 >"$DIR/row-counts.tsv" <<'SQL'
-select 'auth.users', count(*) from auth.users
-union all select 'public.salons', count(*) from public.salons
-union all select 'public.users', count(*) from public.users
-union all select 'public.invitations', count(*) from public.invitations
-union all select 'public.clients', count(*) from public.clients
-union all select 'public.visits', count(*) from public.visits
-union all select 'public.recipes', count(*) from public.recipes
-union all select 'public.recipe_mixes', count(*) from public.recipe_mixes
-union all select 'public.mix_items', count(*) from public.mix_items
-union all select 'public.products', count(*) from public.products
-union all select 'public.product_lines', count(*) from public.product_lines
-union all select 'public.services', count(*) from public.services
-union all select 'public.product_requests', count(*) from public.product_requests
-union all select 'public.audit_log', count(*) from public.audit_log
-union all select 'storage.objects', (xpath('/row/c/text()', query_to_xml('select count(*) as c from storage.objects', false, true, '')))[1]::text::bigint
-  where to_regclass('storage.objects') is not null
-order by 1;
-SQL
+psql "$DB_URL" -X -q -At -F $'\t' -v ON_ERROR_STOP=1 -f "$(dirname "$0")/row-counts.sql" >"$DIR/row-counts.tsv"
 
 {
   echo "created_at=$STAMP"
