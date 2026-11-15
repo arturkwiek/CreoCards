@@ -30,7 +30,15 @@ Celowo **nie** są wysyłane:
 - szablony e-maili – wymagają własnego SMTP (sekcja 6);
 - `storage.vector` – CreoCards nie używa wektorów, w konfiguracji jest `enabled = false`, więc `config push` nie zmienia tego na projekcie.
 
-Przed wysłaniem zawsze przejrzyj diff, który pokazuje `config push`. Nie powinno w nim być `mailer_templates_*`, `mailer_subjects_*` ani `storage.vector`.
+Wartości z `supabase init`, których nie ustawiamy celowo (limity e-maili, długość kodu OTP, MFA, pula połączeń), są w `[remotes.staging]` nadpisane wartościami projektu, więc push ich nie zmienia.
+
+Przed wysłaniem uruchom `npx supabase config diff` (niczego nie zapisuje). Oczekiwany diff przy pierwszym pushu:
+- `auth.site_url` → `https://creo-cards.vercel.app`, `auth.additional_redirect_urls` → `["https://creo-cards.vercel.app/**"]`;
+- `auth.enable_signup` → `false`;
+- `auth.minimum_password_length` → `8`, `auth.password_requirements` → `letters_digits`;
+- `auth.email.otp_expiry` → `86400` (linki ważne 24 h).
+
+Nie powinno w nim być `mailer_templates_*`, `mailer_subjects_*`, `storage.vector` ani `db.pooler`.
 
 ## 2. Wysłanie konfiguracji i migracji na staging
 
@@ -38,6 +46,7 @@ Przed wysłaniem zawsze przejrzyj diff, który pokazuje `config push`. Nie powin
 npx supabase login                                     # jednorazowo, otwiera przeglądarkę
 npx supabase link --project-ref pjbrssmrjzyrnbmjbamp   # hasło bazy: Project Settings → Database
 
+npx supabase config diff                               # podgląd, niczego nie zapisuje
 npx supabase config push                               # Auth: site_url, przekierowania, enable_signup=false
 npx supabase db push --remote                          # migracje z supabase/migrations na powiązany projekt
 ```
