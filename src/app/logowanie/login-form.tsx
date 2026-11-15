@@ -9,12 +9,14 @@ export function LoginForm() {
   return (
     <form action={action} className="flex flex-col gap-4">
       <TextField
-        label="E-mail"
-        id="email"
-        name="email"
-        type="email"
-        autoComplete="email"
-        inputMode="email"
+        label="Login lub e-mail"
+        id="identifier"
+        name="identifier"
+        type="text"
+        autoComplete="username"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
         required
       />
       <TextField

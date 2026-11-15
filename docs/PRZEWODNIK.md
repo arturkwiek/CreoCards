@@ -3,11 +3,11 @@
 Zasada: niczego nie trzeba przepisywać na zapas. Aplikacja uczy się salonu przy okazji zwykłych wizyt.
 
 ## Dla właścicielki – raz, przed startem (ok. 30 minut)
-1. Zaproś uczennice z poziomu aplikacji.
+1. Załóż konta uczennicom w sekcji **Zespół**: imię, login (np. `ania`) i rola – e-mail nie jest potrzebny. Przekaż każdej link do ustawienia hasła (np. SMS-em).
 2. Dodaj tylko 10–20 najczęściej używanych farb i utleniacze. Resztę dopisuje się w trakcie pracy.
 
 ## Dla każdej osoby – 3 kroki
-1. **Zainstaluj** – kliknij link z maila, ustaw hasło, wybierz „Dodaj do ekranu głównego”.
+1. **Zainstaluj** – otwórz link od właścicielki, kliknij „Kontynuuj”, ustaw hasło, wybierz „Dodaj do ekranu głównego”. Logujesz się loginem (albo e-mailem) i hasłem.
 2. **Poćwicz** – otwórz klientkę testową „Anna Przykładowa” i dodaj jej wizytę. Nic tu nie zepsujesz.
 3. **Zapisz pierwszą prawdziwą wizytę** – i tyle.
 

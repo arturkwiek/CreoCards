@@ -458,6 +458,12 @@ verify_enabled = true
 default_pool_size = 15
 max_client_conn = 200
 
+# Logowanie idzie z serwera (Vercel), więc Supabase Auth widzi jedno IP dla wszystkich osób.
+# Limit nieudanych prób na login i IP liczy aplikacja (login_attempts: 5 na login, 20 na IP / 15 min);
+# limit Supabase podniesiony, żeby kilka blokad naraz nie odcięło całego salonu.
+[remotes.staging.auth.rate_limit]
+sign_in_sign_ups = 150
+
 # SMTP wyłączony do czasu weryfikacji domeny mail.studiocreotarnow.pl w Resend.
 # Do tego czasu e-maile wysyła wbudowana poczta Supabase (tylko na adresy członków
 # zespołu projektu, kilka na godzinę), a uczennice zaprasza się linkiem z sekcji Zespół.
@@ -476,8 +482,7 @@ enabled = false
 # admin_email = "env(SMTP_ADMIN_EMAIL)"
 # sender_name = "CreoCards"
 #
-# [remotes.staging.auth.rate_limit]
-# email_sent = 30
+# (w istniejącym bloku [remotes.staging.auth.rate_limit] dopisz: email_sent = 30)
 #
 # [remotes.staging.auth.email.template.invite]
 # subject = "Zaproszenie do CreoCards"

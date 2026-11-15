@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { authRedirect } from "@/lib/auth/paths";
+import { authRedirect, mustChangePassword } from "@/lib/auth/paths";
 import type { Database } from "@/lib/supabase/database.types";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
@@ -30,7 +30,8 @@ export async function proxy(request: NextRequest) {
 
   // Nie wstawiaj kodu między utworzeniem klienta a getClaims() – odświeżenie sesji.
   const { data } = await supabase.auth.getClaims();
-  const target = authRedirect(request.nextUrl.pathname, Boolean(data?.claims?.sub));
+  const claims = data?.claims;
+  const target = authRedirect(request.nextUrl.pathname, Boolean(claims?.sub), mustChangePassword(claims?.app_metadata));
 
   if (target) {
     const redirect = NextResponse.redirect(new URL(target, request.url));
