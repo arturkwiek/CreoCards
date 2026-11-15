@@ -1,10 +1,17 @@
+/** Typy jednorazowych linków prowadzących do ustawienia hasła. */
+export type PasswordLinkType = "invite" | "recovery";
+
 /**
- * Link zaproszenia prowadzący do /auth/confirm (ten sam format co w szablonie e-maila).
- * hashedToken pochodzi z auth.admin.generateLink({ type: "invite" }).
+ * Link prowadzący do /auth/confirm (ten sam format co w szablonach e-maili).
+ * hashedToken pochodzi z auth.admin.generateLink({ type }).
  */
-export function buildInviteLink(origin: string, hashedToken: string): string {
+export function buildAuthLink(origin: string, hashedToken: string, type: PasswordLinkType): string {
   const url = new URL("/auth/confirm", origin);
   url.searchParams.set("token_hash", hashedToken);
-  url.searchParams.set("type", "invite");
+  url.searchParams.set("type", type);
   return url.toString();
+}
+
+export function buildInviteLink(origin: string, hashedToken: string): string {
+  return buildAuthLink(origin, hashedToken, "invite");
 }

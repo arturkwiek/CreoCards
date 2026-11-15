@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { isAuthEmailEnabled } from "@/lib/features";
 import { createClient } from "@/lib/supabase/server";
 import {
   formString,
@@ -40,6 +41,10 @@ export async function requestPasswordReset(
   const email = normalizeEmail(formData.get("email"));
   if (!isValidEmail(email)) {
     return { error: "Podaj poprawny adres e-mail." };
+  }
+
+  if (!isAuthEmailEnabled()) {
+    return { error: "Wysyłka e-maili jest wyłączona. Poproś właścicielkę salonu o link do ustawienia hasła." };
   }
 
   const supabase = await createClient();

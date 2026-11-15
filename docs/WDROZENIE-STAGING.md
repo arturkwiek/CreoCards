@@ -12,6 +12,8 @@ Dopóki domena wysyłkowa **mail.studiocreotarnow.pl** nie jest zweryfikowana w 
 - Uczennice zapraszasz **linkiem**:
   - w sekcji **Zespół** przycisk „Utwórz link zaproszenia”;
   - przy oczekującym zaproszeniu przycisk „Kopiuj link zaproszenia”.
+- Osobie, która ma już konto, ale nie ma hasła (lub go nie pamięta), właścicielka tworzy w sekcji **Zespół** link przyciskiem „Utwórz link do ustawienia hasła”.
+- Przycisk „Wyślij zaproszenie e-mailem” i wysyłka linku z ekranu „Nie pamiętam hasła” są ukryte, dopóki zmienna `AUTH_EMAILS_ENABLED` nie ma wartości `true`.
 - Link jest jednorazowy, ważny 24 godziny i działa tylko dla tej osoby. Przekaż go bezpośrednio, np. SMS-em. Każdy nowy link unieważnia poprzedni.
 - **Polskie szablony e-maili nie są wysyłane na projekt.** Plan Free z wbudowaną pocztą nie pozwala ich zmieniać (`400 entitlement_required … auth.email_templates`). Do czasu Resend maile z Supabase mają domyślną, angielską treść. Link w nich prowadzi przez serwer Supabase i może nie zalogować w aplikacji – do testu używaj linku z `bootstrap --link` lub z sekcji Zespół.
 
@@ -69,6 +71,7 @@ Zaproszenia działają mimo wyłączonej rejestracji, bo tworzy je serwer przez 
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API → Project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API → anon public |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API → service_role (**tajny**) |
+| `AUTH_EMAILS_ENABLED` | nie ustawiaj do czasu Resend (sekcja 6); potem `true` |
 
 Po zmianie zmiennych zrób **Redeploy**.
 
@@ -110,7 +113,8 @@ Skrypt zakłada salon (lub używa istniejącego) i zaproszenie właścicielki. P
    npx supabase config push
    ```
 
-7. Sprawdź w panelu: **Authentication → Emails → SMTP Settings** jest włączone, host `smtp.resend.com`, a w **Templates** są polskie treści zaproszenia i resetu hasła.
+7. W Vercel ustaw `AUTH_EMAILS_ENABLED=true` (Production i Preview) i zrób **Redeploy** – wróci „Wyślij zaproszenie e-mailem” i reset hasła e-mailem.
+8. Sprawdź w panelu: **Authentication → Emails → SMTP Settings** jest włączone, host `smtp.resend.com`, a w **Templates** są polskie treści zaproszenia i resetu hasła.
 
 | Pole SMTP | Wartość |
 |---|---|

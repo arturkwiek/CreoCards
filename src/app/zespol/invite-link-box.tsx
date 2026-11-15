@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { buttonStyles } from "@/components/styles";
 
-/** Pokazuje jednorazowy link zaproszenia z przyciskiem kopiowania. */
-export function InviteLinkBox({ link }: { link: string }) {
+/** Pokazuje jednorazowy link (zaproszenie lub ustawienie hasła) z przyciskiem kopiowania. */
+export function InviteLinkBox({ link, label = "Link zaproszenia" }: { link: string; label?: string }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -20,7 +20,7 @@ export function InviteLinkBox({ link }: { link: string }) {
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-brand/40 bg-brand/5 p-3">
       <label className="text-sm font-medium" htmlFor={`link-${link.slice(-8)}`}>
-        Link zaproszenia
+        {label}
       </label>
       <input
         id={`link-${link.slice(-8)}`}
