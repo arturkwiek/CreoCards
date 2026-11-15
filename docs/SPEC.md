@@ -104,7 +104,7 @@ Dane trzymane centralnie w chmurze, więc każda osoba z zespołu na każdym urz
 
 - **Format**: relacyjna baza PostgreSQL. Główne tabele: `salons`, `users`, `clients`, `visits`, `recipes`, `recipe_mixes`, `mix_items`, `products`, `stock_movements`, `attachments`.
 - **Pliki** (zdjęcia, nagrania) w prywatnym Storage; w bazie tylko odnośnik. Dostęp przez krótkotrwałe podpisane linki.
-- **Logowanie**: indywidualne konto każdej osoby (e-mail + hasło lub magic link), bez kont współdzielonych.
+- **Logowanie**: indywidualne konto każdej osoby (login lub e-mail + hasło), bez kont współdzielonych.
 - **Kontrola dostępu**: Row Level Security – użytkownik widzi wyłącznie dane swojego salonu (`salon_id` w każdej tabeli). Przygotowane pod wiele salonów w przyszłości.
 - **Szyfrowanie**: HTTPS w transmisji, szyfrowanie danych w spoczynku po stronie dostawcy.
 - **Audyt**: pola `created_by`, `created_at`, `updated_at` w każdym rekordzie; miękkie usuwanie (`deleted_at`) zamiast trwałego.
@@ -132,8 +132,12 @@ Jedna instancja aplikacji w chmurze (Vercel + Supabase); nikt nie przechowuje lo
 - Aplikacja dostępna pod własną domeną.
 - Instalacja na telefonie: otwarcie adresu w przeglądarce → logowanie → „Dodaj do ekranu głównego” (PWA).
 - Aktualizacje automatyczne: nowa wersja ładuje się przy kolejnym otwarciu aplikacji.
-- **Konta tylko z zaproszenia**: właścicielka zaprasza osoby e-mailem lub jednorazowym linkiem zaproszenia (do przekazania np. SMS-em); publiczna rejestracja wyłączona.
-- **E-maile (zaproszenia, reset hasła)**: własny SMTP (Resend) z domeną wysyłkową `mail.studiocreotarnow.pl` – **wymagany przed pilotażem**. Do tego czasu na stagingu działa wbudowana poczta Supabase, a zaproszenia przekazuje się linkiem.
+- **Konta zakłada właścicielka** (sekcja Zespół): login (unikalny w salonie; małe litery, cyfry, kropka, myślnik; 3–30 znaków) + rola, e-mail opcjonalny. Publiczna rejestracja wyłączona.
+  - Konto bez e-maila ma niewidoczny adres techniczny `<login>.<salon>@konta.creocards.studiocreotarnow.pl` (subdomena bez MX, nic nie jest wysyłane).
+  - Pierwsze hasło i reset: jednorazowy link do ustawienia hasła (z przyciskiem „Kontynuuj”, do przekazania np. SMS-em) albo hasło tymczasowe z wymuszoną zmianą przy pierwszym logowaniu.
+  - Istniejącym kontom z e-mailem można nadać login; właścicielki logują się prawdziwym e-mailem.
+- **Logowanie**: jedno pole „Login lub e-mail” + hasło. Limit nieudanych prób (5 na login, 20 na IP w 15 minut); komunikat nie zdradza, czy login istnieje.
+- **E-maile (zaproszenia, reset hasła)**: własny SMTP (Resend) z domeną wysyłkową `mail.studiocreotarnow.pl` – **opcjonalny** (odzyskiwanie konta właścicielki e-mailem); nie jest warunkiem pilotażu.
 - Utrata telefonu: wylogowanie wszystkich sesji i reset hasła z poziomu konta właścicielki.
 
 ## Wprowadzenie wbudowane w aplikację (MVP)

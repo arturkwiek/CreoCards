@@ -201,8 +201,8 @@ Wdrożenie stagingu według [`WDROZENIE-STAGING.md`](WDROZENIE-STAGING.md):
 | 10 | Pilotaż w salonie |
 
 **Do zrobienia przed pilotażem:**
-- SMTP Resend z domeną `mail.studiocreotarnow.pl` (rekordy DNS u dostawcy domeny).
-- Projekt Supabase **produkcyjny** (UE) + backupy.
+- Produkcja na **Supabase Pro** (UE): kopie dzienne, 7 dni – i **udana próba przywrócenia** (runbook z Etapu 4a).
+- SMTP Resend z domeną `mail.studiocreotarnow.pl` – **opcjonalnie** (od Etapu 1b uczennice logują się loginem; e-mail tylko do odzyskiwania konta właścicielki).
 - Własna domena aplikacji, np. `app.studiocreotarnow.pl`.
 - Przekazanie roli właścicielki fryzjerce (**Kinga**) – konto testowe/założycielskie przestaje być właścicielem salonu.
 - Plan Vercel: Hobby jest niekomercyjny – przed użyciem w salonie Pro albo inny hosting.

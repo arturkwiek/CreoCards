@@ -57,6 +57,8 @@ npx supabase db push --remote                          # migracje z supabase/mig
 
 > Samo `npx supabase db push` w CLI 3.x celuje w **lokalny** stack. Na staging zawsze z `--remote`.
 
+> Gdy na stagingu jest już migracja z innego, jeszcze nie scalonego PR, CLI odmawia („Remote migration versions not found in local migrations directory”). Nie naprawiaj historii (`migration repair`) – wypchnij z tymczasowej kopii katalogu `supabase/` z kompletem migracji obu gałęzi (`git show origin/<gałąź>:supabase/migrations/<plik>`).
+
 Sprawdź w panelu Supabase:
 - **Authentication → Sign In / Providers**: „Allow new users to sign up” wyłączone;
 - **Authentication → URL Configuration**: Site URL = `https://creo-cards.vercel.app`, w Redirect URLs `https://creo-cards.vercel.app/**` (bez `env(`);
@@ -74,6 +76,7 @@ Zaproszenia działają mimo wyłączonej rejestracji, bo tworzy je serwer przez 
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API → anon public |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API → service_role (**tajny**) |
 | `AUTH_EMAILS_ENABLED` | nie ustawiaj do czasu Resend (sekcja 6); potem `true` |
+| `LOGIN_RATE_SECRET` | losowy sekret (min. 32 znaki) do skrótów HMAC w limicie logowań (**tajny**, sensitive); np. `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"` |
 
 Po zmianie zmiennych zrób **Redeploy**.
 
