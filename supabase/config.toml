@@ -439,6 +439,25 @@ site_url = "https://creo-cards.vercel.app"
 additional_redirect_urls = ["https://creo-cards.vercel.app/**"]
 enable_signup = false
 
+# Poniżej: wartości zdalnego projektu, nadpisujące lokalne domyślne z `supabase init`.
+# Dzięki temu `config push` zmienia tylko to, co ustawiamy celowo (adresy, rejestracja,
+# hasła, ważność linków), a nie osłabia limitów ani nie zmienia puli połączeń planu Free.
+[remotes.staging.auth.email]
+enable_confirmations = true
+max_frequency = "1m0s"
+otp_length = 8
+
+[remotes.staging.auth.sms]
+enable_confirmations = true
+
+[remotes.staging.auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[remotes.staging.db.pooler]
+default_pool_size = 15
+max_client_conn = 200
+
 # SMTP wyłączony do czasu weryfikacji domeny mail.studiocreotarnow.pl w Resend.
 # Do tego czasu e-maile wysyła wbudowana poczta Supabase (tylko na adresy członków
 # zespołu projektu, kilka na godzinę), a uczennice zaprasza się linkiem z sekcji Zespół.
