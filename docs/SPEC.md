@@ -61,11 +61,11 @@ Usprawnienia:
 ## Katalog preparatów
 
 - Produkty dodawane raz, potem dostępne na liście.
-- Pola produktu: marka, linia, numer odcienia, typ (farba / utleniacz / inny), pojemność opakowania, cena zakupu (pod przyszłe finanse).
+- Pola produktu: marka, linia, numer odcienia / stężenie, typ (farba / utleniacz / rozjaśniacz / toner / inny), pojemność opakowania (g lub ml – jedno pole), cena zakupu (pod przyszłe finanse; widoczna tylko dla właścicielki).
 - Wyszukiwanie z podpowiedziami (np. wpisanie „7.1” pokazuje pasujące odcienie).
 - Najczęściej używane produkty na górze listy.
-- Każda marka/linia może mieć **domyślną proporcję utleniacza**, podpowiadaną automatycznie.
-- Import katalogu z CSV (przykład: `docs/katalog-przyklad.csv`).
+- Każda marka/linia może mieć **domyślną proporcję utleniacza**, podpowiadaną automatycznie; produkt może mieć własną proporcję, która ją nadpisuje.
+- Import katalogu z CSV (przykłady: `docs/katalog-przyklad.csv` i `docs/katalog-przyklad-arkusz.csv` – eksport arkusza katalogu z polskimi nagłówkami: „Marka”, „Linia”, „Odcień / stężenie”, „Typ”, „Domyślna proporcja”, „Pojemność opakowania (g/ml)”, „Cena zakupu (zł)”, „Uwagi”). Kolumny w dowolnej kolejności, „Uwagi” pomijane; proporcja „inna (w uwagach)” lub pusta = brak proporcji. Podgląd zmian przed zapisem; ponowny import aktualizuje wypełnione pola.
 
 ## Magazyn
 

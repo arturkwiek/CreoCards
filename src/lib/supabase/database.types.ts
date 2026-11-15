@@ -125,6 +125,170 @@ export type Database = {
           },
         ]
       }
+      product_lines: {
+        Row: {
+          brand: string
+          created_at: string
+          created_by: string
+          default_ratio: number | null
+          deleted_at: string | null
+          id: string
+          name: string
+          salon_id: string
+          updated_at: string
+        }
+        Insert: {
+          brand: string
+          created_at?: string
+          created_by?: string
+          default_ratio?: number | null
+          deleted_at?: string | null
+          id?: string
+          name?: string
+          salon_id?: string
+          updated_at?: string
+        }
+        Update: {
+          brand?: string
+          created_at?: string
+          created_by?: string
+          default_ratio?: number | null
+          deleted_at?: string | null
+          id?: string
+          name?: string
+          salon_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_lines_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_requests: {
+        Row: {
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          description: string
+          id: string
+          kind: Database["public"]["Enums"]["product_request_kind"]
+          product_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          salon_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          description?: string
+          id?: string
+          kind: Database["public"]["Enums"]["product_request_kind"]
+          product_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          salon_id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          description?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["product_request_kind"]
+          product_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          salon_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_requests_product_id_salon_id_fkey"
+            columns: ["product_id", "salon_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "salon_id"]
+          },
+          {
+            foreignKeyName: "product_requests_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          id: string
+          line_id: string
+          package_size: number | null
+          purchase_price: number | null
+          ratio: number | null
+          salon_id: string
+          shade: string
+          shade_key: string | null
+          type: Database["public"]["Enums"]["product_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          id?: string
+          line_id: string
+          package_size?: number | null
+          purchase_price?: number | null
+          ratio?: number | null
+          salon_id?: string
+          shade: string
+          shade_key?: string | null
+          type: Database["public"]["Enums"]["product_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          id?: string
+          line_id?: string
+          package_size?: number | null
+          purchase_price?: number | null
+          ratio?: number | null
+          salon_id?: string
+          shade?: string
+          shade_key?: string | null
+          type?: Database["public"]["Enums"]["product_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_line_id_salon_id_fkey"
+            columns: ["line_id", "salon_id"]
+            isOneToOne: false
+            referencedRelation: "product_lines"
+            referencedColumns: ["id", "salon_id"]
+          },
+          {
+            foreignKeyName: "products_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       salons: {
         Row: {
           created_at: string
@@ -202,10 +366,13 @@ export type Database = {
     }
     Functions: {
       current_salon_id: { Args: never; Returns: string }
+      import_products: { Args: { items: Json }; Returns: Json }
       is_owner: { Args: never; Returns: boolean }
     }
     Enums: {
       allergy_status: "none" | "has"
+      product_request_kind: "missing" | "running_low"
+      product_type: "farba" | "utleniacz" | "rozjasniacz" | "toner" | "inny"
       user_role: "owner" | "apprentice"
     }
     CompositeTypes: {
@@ -335,6 +502,8 @@ export const Constants = {
   public: {
     Enums: {
       allergy_status: ["none", "has"],
+      product_request_kind: ["missing", "running_low"],
+      product_type: ["farba", "utleniacz", "rozjasniacz", "toner", "inny"],
       user_role: ["owner", "apprentice"],
     },
   },
