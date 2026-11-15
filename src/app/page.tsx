@@ -71,6 +71,14 @@ async function HomeContent() {
           <Link href="/zespol" className={buttonStyles.secondary}>
             Zespół i zaproszenia
           </Link>
+          <div className="grid grid-cols-2 gap-2">
+            <Link href="/kosz" className={buttonStyles.secondary}>
+              Kosz
+            </Link>
+            <Link href="/eksport" className={buttonStyles.secondary}>
+              Eksport danych
+            </Link>
+          </div>
         </>
       )}
       <SignOutButton />

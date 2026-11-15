@@ -16,6 +16,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: Database["public"]["Enums"]["audit_action"]
+          created_at: string
+          created_by: string | null
+          id: number
+          old_row: Json | null
+          row_id: string | null
+          salon_id: string
+          table_name: string
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["audit_action"]
+          created_at?: string
+          created_by?: string | null
+          id?: never
+          old_row?: Json | null
+          row_id?: string | null
+          salon_id: string
+          table_name: string
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["audit_action"]
+          created_at?: string
+          created_by?: string | null
+          id?: never
+          old_row?: Json | null
+          row_id?: string | null
+          salon_id?: string
+          table_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           allergies: string
@@ -691,6 +732,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      audit_recipe_snapshot: {
+        Args: { p_visit_id: string }
+        Returns: undefined
+      }
       can_edit_mix: { Args: { p_mix_id: string }; Returns: boolean }
       can_edit_recipe: { Args: { p_recipe_id: string }; Returns: boolean }
       can_edit_visit: { Args: { p_visit_id: string }; Returns: boolean }
@@ -698,6 +743,10 @@ export type Database = {
       import_products: { Args: { items: Json }; Returns: Json }
       import_services: { Args: { items: Json }; Returns: Json }
       is_owner: { Args: never; Returns: boolean }
+      log_export: {
+        Args: { p_row_id?: string; p_scope: string }
+        Returns: undefined
+      }
       login_throttled: {
         Args: { p_ip_hash: string; p_login_hash: string }
         Returns: boolean
@@ -709,10 +758,12 @@ export type Database = {
           uses: number
         }[]
       }
+      recipe_snapshot: { Args: { p_visit_id: string }; Returns: Json }
       record_login_attempt: {
         Args: { p_ip_hash: string; p_login_hash: string; p_success: boolean }
         Returns: undefined
       }
+      restore_version: { Args: { p_audit_id: number }; Returns: undefined }
       save_recipe: {
         Args: { p_recipe: Json; p_visit_id: string }
         Returns: string
@@ -720,6 +771,12 @@ export type Database = {
     }
     Enums: {
       allergy_status: "none" | "has"
+      audit_action:
+        | "update"
+        | "delete"
+        | "restore"
+        | "recipe_snapshot"
+        | "export"
       mix_zone: "calosc" | "odrost" | "dlugosci" | "konce" | "pasemka" | "inne"
       product_request_kind: "missing" | "running_low"
       product_type: "farba" | "utleniacz" | "rozjasniacz" | "toner" | "inny"
@@ -852,6 +909,13 @@ export const Constants = {
   public: {
     Enums: {
       allergy_status: ["none", "has"],
+      audit_action: [
+        "update",
+        "delete",
+        "restore",
+        "recipe_snapshot",
+        "export",
+      ],
       mix_zone: ["calosc", "odrost", "dlugosci", "konce", "pasemka", "inne"],
       product_request_kind: ["missing", "running_low"],
       product_type: ["farba", "utleniacz", "rozjasniacz", "toner", "inny"],

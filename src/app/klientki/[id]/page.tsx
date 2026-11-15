@@ -68,7 +68,19 @@ async function ClientDetail({ params }: { params: PageProps<"/klientki/[id]">["p
       <Link href={`/klientki/${client.id}/edytuj`} className={buttonStyles.secondary}>
         Edytuj dane
       </Link>
-      {user.role === "owner" && <DeleteClientButton id={client.id} />}
+      {user.role === "owner" && (
+        <>
+          <div className="grid grid-cols-2 gap-2">
+            <Link href={`/klientki/${client.id}/historia`} className={buttonStyles.secondary}>
+              Historia zmian
+            </Link>
+            <a href={`/eksport/klientka/${client.id}`} download className={buttonStyles.secondary}>
+              Eksportuj dane
+            </a>
+          </div>
+          <DeleteClientButton id={client.id} />
+        </>
+      )}
     </>
   );
 }
