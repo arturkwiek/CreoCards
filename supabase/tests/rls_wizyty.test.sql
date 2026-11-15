@@ -78,8 +78,12 @@ select throws_ok(
   '42501', null, 'uczennica nie importuje usług');
 
 select lives_ok(
-  $$insert into public.visits (id, client_id, service_id, visit_at) values ('aa000000-0000-0000-0000-0000000000a1', 'c1000000-0000-0000-0000-0000000000a1', 'f1000000-0000-0000-0000-0000000000a1', now() - interval '30 days')$$,
+  $$insert into public.visits (client_id, service_id, visit_at) values ('c1000000-0000-0000-0000-0000000000a1', 'f1000000-0000-0000-0000-0000000000a1', now() - interval '30 days')$$,
   'uczennica dodaje wizytę (data wstecz)');
+-- Stały identyfikator do dalszych testów (id nadaje baza; kolumna bez grantu).
+reset role;
+update public.visits set id = 'aa000000-0000-0000-0000-0000000000a1' where client_id = 'c1000000-0000-0000-0000-0000000000a1';
+set local role authenticated;
 select is(
   (select created_by from public.visits where id = 'aa000000-0000-0000-0000-0000000000a1'),
   '22222222-2222-2222-2222-222222222222'::uuid, 'wizyta: osoba wykonująca = autorka');
