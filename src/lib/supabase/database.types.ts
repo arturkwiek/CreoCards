@@ -152,6 +152,67 @@ export type Database = {
         }
         Relationships: []
       }
+      mix_items: {
+        Row: {
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          grams: number
+          id: string
+          mix_id: string
+          position: number
+          product_id: string
+          salon_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          grams: number
+          id?: string
+          mix_id: string
+          position?: number
+          product_id: string
+          salon_id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          grams?: number
+          id?: string
+          mix_id?: string
+          position?: number
+          product_id?: string
+          salon_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mix_items_mix_id_salon_id_fkey"
+            columns: ["mix_id", "salon_id"]
+            isOneToOne: false
+            referencedRelation: "recipe_mixes"
+            referencedColumns: ["id", "salon_id"]
+          },
+          {
+            foreignKeyName: "mix_items_product_id_salon_id_fkey"
+            columns: ["product_id", "salon_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "salon_id"]
+          },
+          {
+            foreignKeyName: "mix_items_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_lines: {
         Row: {
           brand: string
@@ -316,6 +377,127 @@ export type Database = {
           },
         ]
       }
+      recipe_mixes: {
+        Row: {
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          id: string
+          oxidant_grams: number
+          oxidant_percent: number | null
+          oxidant_product_id: string | null
+          position: number
+          processing_minutes: number | null
+          ratio: number | null
+          recipe_id: string
+          salon_id: string
+          updated_at: string
+          zone: Database["public"]["Enums"]["mix_zone"]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          id?: string
+          oxidant_grams?: number
+          oxidant_percent?: number | null
+          oxidant_product_id?: string | null
+          position?: number
+          processing_minutes?: number | null
+          ratio?: number | null
+          recipe_id: string
+          salon_id?: string
+          updated_at?: string
+          zone?: Database["public"]["Enums"]["mix_zone"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          id?: string
+          oxidant_grams?: number
+          oxidant_percent?: number | null
+          oxidant_product_id?: string | null
+          position?: number
+          processing_minutes?: number | null
+          ratio?: number | null
+          recipe_id?: string
+          salon_id?: string
+          updated_at?: string
+          zone?: Database["public"]["Enums"]["mix_zone"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_mixes_oxidant_product_id_salon_id_fkey"
+            columns: ["oxidant_product_id", "salon_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "salon_id"]
+          },
+          {
+            foreignKeyName: "recipe_mixes_recipe_id_salon_id_fkey"
+            columns: ["recipe_id", "salon_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id", "salon_id"]
+          },
+          {
+            foreignKeyName: "recipe_mixes_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipes: {
+        Row: {
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          id: string
+          note: string
+          salon_id: string
+          updated_at: string
+          visit_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          id?: string
+          note?: string
+          salon_id?: string
+          updated_at?: string
+          visit_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          id?: string
+          note?: string
+          salon_id?: string
+          updated_at?: string
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipes_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipes_visit_id_salon_id_fkey"
+            columns: ["visit_id", "salon_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id", "salon_id"]
+          },
+        ]
+      }
       salons: {
         Row: {
           created_at: string
@@ -342,6 +524,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      services: {
+        Row: {
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          duration_min: number | null
+          id: string
+          name: string
+          position: number
+          price_from: number | null
+          price_to: number | null
+          salon_id: string
+          updated_at: string
+          with_color: boolean
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          duration_min?: number | null
+          id?: string
+          name: string
+          position?: number
+          price_from?: number | null
+          price_to?: number | null
+          salon_id?: string
+          updated_at?: string
+          with_color?: boolean
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          duration_min?: number | null
+          id?: string
+          name?: string
+          position?: number
+          price_from?: number | null
+          price_to?: number | null
+          salon_id?: string
+          updated_at?: string
+          with_color?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {
@@ -390,25 +625,102 @@ export type Database = {
           },
         ]
       }
+      visits: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          id: string
+          price: number | null
+          salon_id: string
+          service_id: string | null
+          updated_at: string
+          visit_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          id?: string
+          price?: number | null
+          salon_id?: string
+          service_id?: string | null
+          updated_at?: string
+          visit_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          id?: string
+          price?: number | null
+          salon_id?: string
+          service_id?: string | null
+          updated_at?: string
+          visit_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visits_client_id_salon_id_fkey"
+            columns: ["client_id", "salon_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id", "salon_id"]
+          },
+          {
+            foreignKeyName: "visits_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_service_id_salon_id_fkey"
+            columns: ["service_id", "salon_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id", "salon_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      can_edit_mix: { Args: { p_mix_id: string }; Returns: boolean }
+      can_edit_recipe: { Args: { p_recipe_id: string }; Returns: boolean }
+      can_edit_visit: { Args: { p_visit_id: string }; Returns: boolean }
       current_salon_id: { Args: never; Returns: string }
       import_products: { Args: { items: Json }; Returns: Json }
+      import_services: { Args: { items: Json }; Returns: Json }
       is_owner: { Args: never; Returns: boolean }
       login_throttled: {
         Args: { p_ip_hash: string; p_login_hash: string }
         Returns: boolean
       }
+      product_usage: {
+        Args: never
+        Returns: {
+          product_id: string
+          uses: number
+        }[]
+      }
       record_login_attempt: {
         Args: { p_ip_hash: string; p_login_hash: string; p_success: boolean }
         Returns: undefined
       }
+      save_recipe: {
+        Args: { p_recipe: Json; p_visit_id: string }
+        Returns: string
+      }
     }
     Enums: {
       allergy_status: "none" | "has"
+      mix_zone: "calosc" | "odrost" | "dlugosci" | "konce" | "pasemka" | "inne"
       product_request_kind: "missing" | "running_low"
       product_type: "farba" | "utleniacz" | "rozjasniacz" | "toner" | "inny"
       user_role: "owner" | "apprentice"
@@ -540,6 +852,7 @@ export const Constants = {
   public: {
     Enums: {
       allergy_status: ["none", "has"],
+      mix_zone: ["calosc", "odrost", "dlugosci", "konce", "pasemka", "inne"],
       product_request_kind: ["missing", "running_low"],
       product_type: ["farba", "utleniacz", "rozjasniacz", "toner", "inny"],
       user_role: ["owner", "apprentice"],

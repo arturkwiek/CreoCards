@@ -33,8 +33,10 @@ Zasada: wszystko poza polami obowiązkowymi uzupełnia się przy okazji, nigdy n
 
 ## Wizyta
 
-- Data i osoba wykonująca zapisują się automatycznie.
-- Usługa wybierana z listy.
+- Data i osoba wykonująca zapisują się automatycznie; datę można zmienić, także wstecz (przenoszenie receptur z zeszytu).
+- Na ekranie wizyty (nowej i edycji) – wyróżniony blok alergii klientki nad recepturą.
+- Usługa wybierana z listy (lista usług z zakładki „Usługi” arkusza: usługa, cena od–do, czas, „Z farbą?”; import CSV). Usługa „z farbą” od razu otwiera recepturę.
+- Cena wizyty – opcjonalna, z podpowiedzią „od–do” z usługi.
 - Receptura (opcjonalna, patrz niżej).
 - Zdjęcia gotowej fryzury (jedno lub więcej).
 - Notatka głosowa z automatyczną transkrypcją na tekst.
@@ -46,16 +48,16 @@ Receptura należy do wizyty, nie do klientki. Składa się z jednej lub kilku mi
 
 Każda mieszanka:
 
-- **Strefa** – wybór z listy: odrost, długości, końce, pasemka, inne.
+- **Strefa** – wybór z listy: całość, odrost, długości, końce, pasemka, inne.
 - **Farby** – jedna lub więcej pozycji: produkt z katalogu + ilość w gramach.
-- **Utleniacz** – stężenie (przyciski: 3%, 6%, 9%, 12%) + proporcja (przyciski: 1:1, 1:1,5, 1:2, własna). Gramy utleniacza wyliczane automatycznie.
+- **Utleniacz** – stężenie (przyciski: 3%, 6%, 9%, 12%) albo „bez utleniacza” (0 g) + proporcja (przyciski: 1:1, 1:1,5, 1:2, własna). Proporcja podpowiadana z pierwszego produktu mieszanki (własna produktu lub domyślna linii), zawsze edytowalna. Gramy utleniacza wyliczane automatycznie (suma gramów farb × proporcja).
 - **Czas trzymania** w minutach.
 
 Do całej receptury: jedna krótka notatka.
 
 Usprawnienia:
 
-- Przycisk **„Powtórz ostatnią recepturę”** – kopiuje recepturę z poprzedniej wizyty do edycji.
+- Przycisk **„Powtórz ostatnią recepturę”** – kopiuje recepturę z ostatniej wizyty, która ma recepturę, do edycji.
 - Szybkie wartości gramów (np. 30 / 60 / 90 g) oraz przyciski +/-.
 
 ## Katalog preparatów
@@ -155,7 +157,7 @@ Przewodnik dla zespołu: `docs/PRZEWODNIK.md`.
 ## Przyszłe etapy (poza MVP, ale uwzględnione w modelu danych)
 
 - **Finanse**: cena usługi i koszt materiałów zapisywane od początku; raporty, rentowność usług i rozliczenia później.
-- Rozszerzone uprawnienia właścicielki, akceptacja receptur uczennic.
+- Rozszerzone uprawnienia właścicielki, akceptacja receptur uczennic. (Już w MVP: wizytę edytuje jej autorka lub właścicielka.)
 - Wspólny kalendarz wizyt.
 - Przypomnienia o teście uczuleniowym.
 - Szablony usług.

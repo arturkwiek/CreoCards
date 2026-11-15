@@ -5,7 +5,9 @@ import { Suspense } from "react";
 import { buttonStyles } from "@/components/styles";
 import { requireUser } from "@/lib/auth/session";
 import { formatPhone, telHref } from "@/lib/clients/phone";
+import { AllergyNotice } from "../allergy-notice";
 import { getClient } from "../data";
+import { VisitList } from "./visit-list";
 import { DeleteClientButton } from "./delete-client-button";
 
 // Tytuł bez imienia klientki (dane osobowe nie trafiają do historii przeglądarki).
@@ -23,19 +25,11 @@ async function ClientDetail({ params }: { params: PageProps<"/klientki/[id]">["p
     <>
       <h1 className="text-2xl font-semibold">{client.full_name}</h1>
 
-      {client.allergy_status === "has" ? (
-        <section
-          aria-label="Alergie i uwagi zdrowotne"
-          className="rounded-xl border-2 border-red-600 bg-red-50 px-4 py-3 text-red-900 dark:bg-red-950 dark:text-red-100"
-        >
-          <p className="font-semibold">⚠ Alergie / uwagi zdrowotne</p>
-          <p className="mt-1 whitespace-pre-wrap">
-            {client.allergies || "Brak opisu – dopytaj klientkę przed koloryzacją."}
-          </p>
-        </section>
-      ) : (
-        <p className="rounded-xl bg-foreground/5 px-4 py-3 text-sm text-foreground/70">Brak znanych alergii</p>
-      )}
+      <AllergyNotice status={client.allergy_status} allergies={client.allergies} />
+
+      <Link href={`/klientki/${client.id}/wizyta/nowa`} className={buttonStyles.primary}>
+        + Nowa wizyta
+      </Link>
 
       <a href={telHref(client.phone)} className={buttonStyles.secondary}>
         Zadzwoń: {formatPhone(client.phone)}
@@ -67,11 +61,11 @@ async function ClientDetail({ params }: { params: PageProps<"/klientki/[id]">["p
         </div>
       </dl>
 
-      <p className="rounded-xl border border-dashed border-foreground/20 px-4 py-3 text-sm text-foreground/60">
-        Wizyty i receptury pojawią się tu w kolejnym etapie.
-      </p>
+      <Suspense fallback={<p className="text-sm text-foreground/60">Ładowanie wizyt…</p>}>
+        <VisitList clientId={client.id} />
+      </Suspense>
 
-      <Link href={`/klientki/${client.id}/edytuj`} className={buttonStyles.primary}>
+      <Link href={`/klientki/${client.id}/edytuj`} className={buttonStyles.secondary}>
         Edytuj dane
       </Link>
       {user.role === "owner" && <DeleteClientButton id={client.id} />}
