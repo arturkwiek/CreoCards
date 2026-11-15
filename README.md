@@ -5,6 +5,7 @@ Aplikacja dla studia fryzur **Creo**: kartoteka klientek, historia wizyt i recep
 ## Dokumentacja
 - [docs/SPEC.md](docs/SPEC.md) – wymagania funkcjonalne i techniczne (MVP)
 - [docs/ROADMAP.md](docs/ROADMAP.md) – etapy wdrożenia, kryteria akceptacji, quick guide
+- [docs/PRZEBIEG-PROJEKTU.md](docs/PRZEBIEG-PROJEKTU.md) – przebieg projektu: skąd, gdzie, dokąd (quick guide)
 - [docs/PRZEWODNIK.md](docs/PRZEWODNIK.md) – przewodnik na start dla zespołu salonu
 - [docs/WDROZENIE-STAGING.md](docs/WDROZENIE-STAGING.md) – staging: Supabase, SMTP (Resend), Vercel, pierwsza właścicielka
 - [AGENTS.md](AGENTS.md) – reguły dla agentów AI

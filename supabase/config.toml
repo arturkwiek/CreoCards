@@ -146,8 +146,9 @@ max_catalogs = 2
 # [storage.analytics.buckets.my-warehouse]
 
 # Store vector embeddings in S3 for large and durable datasets
+# CreoCards nie używa wektorów – wyłączone, żeby `config push` nie włączał ich na zdalnym projekcie.
 [storage.vector]
-enabled = true
+enabled = false
 max_buckets = 10
 max_indexes = 5
 
@@ -249,14 +250,10 @@ otp_expiry = 86400
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Szablony e-maili (PL). Linki prowadzą do /auth/confirm z token_hash.
-[auth.email.template.invite]
-subject = "Zaproszenie do CreoCards"
-content_path = "./supabase/templates/invite.html"
-
-[auth.email.template.recovery]
-subject = "CreoCards – ustaw nowe hasło"
-content_path = "./supabase/templates/recovery.html"
+# Szablony e-maili (PL) są w supabase/templates/ i linkują do /auth/confirm z token_hash.
+# NIE włączamy ich tutaj: blok bazowy dziedziczy [remotes.staging], a projekt na planie
+# Free z wbudowaną pocztą odrzuca zmianę szablonów (400 entitlement_required,
+# auth.email_templates). Wracają razem z SMTP Resend – patrz koniec pliku.
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
@@ -431,14 +428,15 @@ enabled = true
 
 # ---------------------------------------------------------------------------
 # Staging: creocards-staging (eu-west-3). Instrukcja: docs/WDROZENIE-STAGING.md
-# Przed `npx supabase config push` ustaw w powłoce: STAGING_SITE_URL.
 # ---------------------------------------------------------------------------
 [remotes.staging]
 project_id = "pjbrssmrjzyrnbmjbamp"
 
 [remotes.staging.auth]
-site_url = "env(STAGING_SITE_URL)"
-additional_redirect_urls = ["env(STAGING_SITE_URL)/**"]
+# Adres publiczny, nie sekret. Wpisany na stałe, bo CLI podstawia env() tylko wtedy,
+# gdy cała wartość to env(...) – "env(X)/**" trafiłoby na projekt dosłownie.
+site_url = "https://creo-cards.vercel.app"
+additional_redirect_urls = ["https://creo-cards.vercel.app/**"]
 enable_signup = false
 
 # SMTP wyłączony do czasu weryfikacji domeny mail.studiocreotarnow.pl w Resend.
@@ -447,8 +445,8 @@ enable_signup = false
 [remotes.staging.auth.email.smtp]
 enabled = false
 
-# Włączenie Resend (wymagane przed pilotażem) – zamień blok powyżej na poniższy
-# i odkomentuj limit; przed `config push` ustaw SMTP_PASS i SMTP_ADMIN_EMAIL:
+# Włączenie Resend (wymagane przed pilotażem) – zamień blok powyżej na poniższy,
+# odkomentuj limit i szablony e-maili; przed `config push` ustaw SMTP_PASS i SMTP_ADMIN_EMAIL:
 #
 # [remotes.staging.auth.email.smtp]
 # enabled = true
@@ -461,3 +459,11 @@ enabled = false
 #
 # [remotes.staging.auth.rate_limit]
 # email_sent = 30
+#
+# [remotes.staging.auth.email.template.invite]
+# subject = "Zaproszenie do CreoCards"
+# content_path = "./supabase/templates/invite.html"
+#
+# [remotes.staging.auth.email.template.recovery]
+# subject = "CreoCards – ustaw nowe hasło"
+# content_path = "./supabase/templates/recovery.html"

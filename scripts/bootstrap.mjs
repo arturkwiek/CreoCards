@@ -1,7 +1,7 @@
 // Jednorazowe założenie salonu i zaproszenie właścicielki.
 // Użycie (WSL): npm run bootstrap -- --salon "Creo" --email adres@domena.pl [--name "Imię"]
 //   --link [--site-url https://adres-aplikacji]  – wypisz link zaproszenia zamiast wysyłać e-mail
-//                                                  (adres domyślnie z STAGING_SITE_URL)
+//                                                  (domyślnie STAGING_SITE_URL albo https://creo-cards.vercel.app)
 // Wymaga w .env.local: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
 import { parseArgs } from "node:util";
 import { createClient } from "@supabase/supabase-js";
@@ -25,7 +25,10 @@ if (!salonName || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
   process.exit(1);
 }
 
-const siteUrl = (values["site-url"] ?? process.env.STAGING_SITE_URL ?? "").trim().replace(/\/+$/, "");
+const DEFAULT_SITE_URL = "https://creo-cards.vercel.app"; // główny adres stagingu
+const siteUrl = (values["site-url"] ?? process.env.STAGING_SITE_URL ?? DEFAULT_SITE_URL)
+  .trim()
+  .replace(/\/+$/, "");
 if (values.link && !/^https?:\/\/[^/]+$/.test(siteUrl)) {
   console.error("Opcja --link wymaga adresu aplikacji: --site-url https://… albo zmiennej STAGING_SITE_URL.");
   process.exit(1);
