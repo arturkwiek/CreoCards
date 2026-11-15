@@ -17,7 +17,7 @@ import { THROTTLED_MESSAGE, attemptKeys, clientIp, isThrottled, recordAttempt } 
 
 export type FormState = { error?: string; success?: string };
 
-export const SIGN_IN_ERROR = "Nieprawidłowy login/e-mail lub hasło.";
+const SIGN_IN_ERROR = "Nieprawidłowy login/e-mail lub hasło.";
 
 /** Login → adres konta (zapytanie kluczem service role, nic nie trafia do przeglądarki). */
 async function emailForLogin(login: string): Promise<string> {
