@@ -1,0 +1,10 @@
+Typ,Marka,Linia,Odcień / stężenie,Domyślna proporcja,Pojemność opakowania (g/ml),Cena zakupu (zł),Uwagi
+Farba,Marka A,Linia Classic,6.0,1:1.5,60,"21,50",
+Farba,Marka A,Linia Classic,"7,1",1:1.5,60,"21,50",
+Farba,Marka A,Linia Classic,7.11,1:2,60,"23,00",intensywny – więcej utleniacza
+Farba,Marka A,Linia Classic,8.3,1:1.5,60,,
+Utleniacz,Marka A,Oxyd,6%,,1000,"32,00",
+Utleniacz,Marka A,Oxyd,9%,,1000,"32,00",
+Rozjaśniacz,Marka B,Blond Plex,Proszek,1:2,500,"89,00",
+Toner,Marka B,Gloss,9.12,1:1,60,,
+Inny,Marka B,Plex,Krok 1,inna (w uwagach),100,,"proporcja wg instrukcji, ""Krok 1"" dodawany do mieszanki"
