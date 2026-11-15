@@ -38,12 +38,16 @@ async function HomeContent() {
 
       {needsFullName(user.fullName) && <NamePrompt />}
 
+      <Link href="/klientki" className={buttonStyles.primary}>
+        Klientki
+      </Link>
+
       <p className="rounded-xl bg-foreground/5 px-4 py-3 text-sm text-foreground/70">
-        Klientki, wizyty i receptury pojawią się tu w kolejnych etapach.
+        Wizyty i receptury pojawią się tu w kolejnych etapach.
       </p>
 
       {user.role === "owner" && (
-        <Link href="/zespol" className={buttonStyles.primary}>
+        <Link href="/zespol" className={buttonStyles.secondary}>
           Zespół i zaproszenia
         </Link>
       )}
