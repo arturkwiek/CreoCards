@@ -40,3 +40,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Kopie zapasowe (zaszyfrowane i odszyfrowane) – nigdy w repozytorium
+*.age
+*.agekey
+creocards-*-db-*.sha256
+creocards-*-db-*.tar.gz

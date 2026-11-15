@@ -14,15 +14,20 @@ OUT="${3:-$HOME/creocards-restore}"
 [ -f "$KEY" ] || fail "brak klucza $KEY"
 command -v age >/dev/null || fail "zainstaluj age: sudo apt install -y age"
 
-BASE="$(basename "$FILE" .tar.gz.age)"
-SUMS="$(dirname "$FILE")/$BASE.sha256"
+# Panel Backblaze B2 dokleja przy pobieraniu ścieżkę jako przedrostek (np. staging_db_creocards-…) – pomijamy go.
+RAW="$(basename "$FILE")"
+PFX="${RAW%%creocards-*}"
+BASE="$(basename "${RAW#"$PFX"}" .tar.gz.age)"
+[[ "$BASE" == creocards-* ]] || fail "nazwa pliku nie wygląda na kopię CreoCards (creocards-…tar.gz.age)"
+SUMS="$(dirname "$FILE")/$PFX$BASE.sha256"
+[ -f "$SUMS" ] || SUMS="$(dirname "$FILE")/$BASE.sha256"
 if [ -f "$SUMS" ]; then
   expected="$(grep " $BASE.tar.gz.age\$" "$SUMS" | cut -d' ' -f1)"
   actual="$(sha256sum "$FILE" | cut -d' ' -f1)"
   [ "$expected" = "$actual" ] || fail "suma SHA-256 pliku zaszyfrowanego się nie zgadza – plik uszkodzony"
   echo "Suma SHA-256 pliku zaszyfrowanego: OK"
 else
-  echo "Uwaga: brak pliku $BASE.sha256 obok kopii – pomijam sprawdzenie sumy."
+  echo "Uwaga: brak pliku ${PFX}$BASE.sha256 obok kopii – pomijam sprawdzenie sumy."
 fi
 
 mkdir -p "$OUT"

@@ -46,6 +46,7 @@ Pobierz **najnowszą parę** plików o tej samej nazwie:
 - `creocards-staging-db-RRRRMMDDTGGMMSSZ.sha256`
 
 Pliki trafią do katalogu Pobrane w Windows, czyli w WSL do `/mnt/c/Users/Dell/Downloads/`.
+Panel B2 dokleja do nazwy ścieżkę (np. `staging_db_creocards-staging-db-….tar.gz.age`) – nie zmieniaj nazw, skrypt z kroku 3 przyjmuje obie postaci.
 
 ## 3. Odszyfrowanie i sprawdzenie (u Ciebie, klucz nie opuszcza komputera)
 

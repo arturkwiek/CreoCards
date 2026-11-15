@@ -163,6 +163,21 @@ Zasady bezpieczeństwa danych (pełna lista w `AGENTS.md`): migracje tylko dodaj
 - Obejście: właścicielka tworzy **link zaproszenia** (jednorazowy, 24 h) i wysyła go uczennicy SMS-em. `npm run bootstrap … --link` wypisuje link w terminalu.
 - SMTP na stagingu wyłączony; gotowa konfiguracja Resend czeka w komentarzu w `supabase/config.toml`.
 
+### Etap 4a – Bezpieczeństwo danych (PR #13)
+- Kosz, historia zmian z przywracaniem wersji (tylko właścicielka), eksport CSV/XLSX całości i jednej klientki (RODO).
+- Nocny backup poza Supabase: GitHub Actions → `supabase db dump` (role, schemat, dane) → szyfrowanie **age** (klucz prywatny tylko u właściciela projektu) → **Backblaze B2 (UE)**, Object Lock 30 dni. Runbook: [`PRZYWRACANIE.md`](PRZYWRACANIE.md).
+- **Próba przywrócenia 15.11.2026 – udana.** Kopia `creocards-staging-db-20261115T214359Z` przywrócona na tymczasowym projekcie `creocards-restore-test` (Free, Paryż), potem projekt usunięty.
+  - Odszyfrowanie i sumy SHA-256: OK; przywrócenie w jednej transakcji: OK; `migration repair`: OK; **liczby wierszy: ZGODNE**; czas od pobrania pliku do wyniku: **ok. 1 min**.
+  - Aplikacja uruchomiona lokalnie na projekcie próbnym – lista kontrolna 15/15: logowanie właścicielki e-mailem i uczennicy loginem, odrzucenie złego hasła, lista klientek, czerwony blok alergii, receptura wizyty z produktami, katalog, usługi, Historia zmian klientki i wizyty, Kosz (właścicielka tak, uczennica nie).
+  - Hasła kont ustawione na projekcie próbnym na tymczasowe (konta i tożsamości z kopii działają). Dane z kosza (testowe wizyty, receptury) wyjęte z kosza tylko na projekcie próbnym, żeby sprawdzić widoki.
+- Problemy z próby i poprawki:
+  | Problem | Przyczyna | Rozwiązanie |
+  |---|---|---|
+  | Pierwszy backup: `password authentication failed` | błędny `STAGING_DB_URL` w sekretach GitHub | sekret ustawiony ponownie |
+  | Pierwsza próba: `permission denied for table buckets_vectors` | zrzut obejmował wewnętrzne tabele Supabase, do których `postgres` na nowym projekcie nie ma prawa zapisu | dane tylko z `public` + listy dozwolonych (`auth.users`, `auth.identities`, `storage.buckets`, `storage.objects`); CI przy każdym PR przywraca kopię na czystej bazie jako `postgres` bez superusera |
+  | Plik z panelu B2 ma nazwę `staging_db_creocards-…` | panel dokleja ścieżkę jako przedrostek | `decrypt-backup.sh` pomija przedrostek (test w CI) |
+- Kolejna próba: raz na kwartał i przed pilotażem na produkcji (Supabase Pro).
+
 ---
 
 ## 5. Gdzie jesteśmy teraz
@@ -183,6 +198,7 @@ Wdrożenie stagingu według [`WDROZENIE-STAGING.md`](WDROZENIE-STAGING.md):
 - [x] `/auth/confirm` z przyciskiem „Kontynuuj” (PR #8) – podglądy linków w SMS/WhatsApp i skanery poczty nie zużywają tokenu
 - [x] Etap 2 – Klientki (PR #9): migracja `clients` na stagingu (`db push --remote`), testy RLS w CI
 - [ ] Kryteria akceptacji Etapu 2 na telefonie: dodanie klientki w < 20 s, wyszukanie po 3 cyfrach telefonu
+- [x] Etap 4a: nocny backup do Backblaze B2 działa; **próba przywrócenia udana (15.11.2026, ok. 1 min, liczby wierszy zgodne)**
 
 ---
 

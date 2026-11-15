@@ -51,7 +51,10 @@ jobs:
           AGE_RECIPIENT="$(age-keygen -y "$RUNNER_TEMP/test.agekey")" \
           BACKUP_PREFIX=ci BACKUP_SKIP_UPLOAD=1 BACKUP_OUT_DIR="$RUNNER_TEMP/backup-out" \
             bash scripts/backup/backup.sh
-          bash scripts/backup/decrypt-backup.sh "$(ls "$RUNNER_TEMP"/backup-out/*.tar.gz.age)" "$RUNNER_TEMP/test.agekey" "$RUNNER_TEMP/restore"
+          # Nazwy jak po pobraniu z panelu B2 (przedrostek ścieżki, np. staging_db_).
+          for f in "$RUNNER_TEMP"/backup-out/*; do mv "$f" "$RUNNER_TEMP/backup-out/ci_db_$(basename "$f")"; done
+          bash scripts/backup/decrypt-backup.sh "$(ls "$RUNNER_TEMP"/backup-out/*.tar.gz.age)" "$RUNNER_TEMP/test.agekey" "$RUNNER_TEMP/restore" | tee "$RUNNER_TEMP/decrypt.log"
+          grep -q "Suma SHA-256 pliku zaszyfrowanego: OK" "$RUNNER_TEMP/decrypt.log"
       - name: Test przywracania (czysta baza Supabase bez migracji, rola postgres bez superusera)
         run: |
           # Czysta baza jak nowy projekt: reset z pustym katalogiem migracji (Auth i Storage odtwarzają swoje schematy).
