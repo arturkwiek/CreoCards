@@ -18,8 +18,8 @@ Jeden etap = jedno zadanie dla agenta = osobna gałąź i pull request. Kolejny 
 | 0. Fundament | Szkielet Next.js + TS + Tailwind, Supabase, PWA (manifest, ikona), ESLint, CI na GitHubie | Aplikacja działa na Vercel preview i daje się dodać do ekranu głównego |
 | 1. Konta i role | Logowanie, zaproszenia, role Właścicielka/Uczennica, tabele `salons`, `users`, RLS | Zaproszona osoba loguje się; bez zaproszenia rejestracja niemożliwa; test RLS przechodzi |
 | 2. Klientki | Tabela `clients`, lista, wyszukiwanie po imieniu/telefonie, formularz minimalny, wyróżnione alergie | Dodanie klientki w < 20 s; wyszukanie po 3 cyfrach telefonu |
-| 3. Katalog preparatów | Tabela `products`, marki/linie z domyślną proporcją, wyszukiwarka z podpowiedziami, import CSV, „Zgłoś brak” | Import `docs/katalog-przyklad.csv`; wpisanie „7.1” pokazuje odcienie |
-| 4. Wizyty i receptury | `visits`, `recipes`, `recipe_mixes`, `mix_items`; strefy, gramy, przyciski utleniacza, auto-wyliczenie, „Powtórz ostatnią recepturę” | Receptura 2 mieszanek w < 1 min; powtórzenie poprzedniej jednym kliknięciem |
+| 3. Katalog preparatów | Tabela `products`, marki/linie z domyślną proporcją, wyszukiwarka z podpowiedziami, import CSV, „Zgłoś brak” | Import `docs/katalog-przyklad.csv` (i arkusza z polskimi nagłówkami); wpisanie „7.1” pokazuje odcienie |
+| 4. Wizyty i receptury | `visits`, `recipes`, `recipe_mixes`, `mix_items`; strefy, gramy, przyciski utleniacza, auto-wyliczenie, „Powtórz ostatnią recepturę”; lista usług z zakładki „Usługi” arkusza katalogu Kingi (usługa, cena od–do, czas, „Z farbą?”) | Receptura 2 mieszanek w < 1 min; powtórzenie poprzedniej jednym kliknięciem |
 | 5. Zdjęcia | Aparat w PWA, kompresja, prywatny Storage, `attachments`, oś czasu klientki | Zdjęcie widoczne u innej osoby na innym telefonie |
 | 6. Notatki głosowe | Nagrywanie w przeglądarce, upload, transkrypcja przez API, edycja tekstu | Nagranie 30 s zamienia się w tekst po polsku |
 | 7. Szkice | Status Szkic/Zakończona, autozapis, zapis lokalny offline + synchronizacja, przypomnienie na koniec dnia | Wizyta zapisana w trybie samolotowym trafia na serwer po powrocie sieci |
