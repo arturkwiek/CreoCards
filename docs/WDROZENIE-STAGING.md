@@ -4,6 +4,8 @@ Projekt Supabase: **creocards-staging** (`pjbrssmrjzyrnbmjbamp`, region eu-west-
 Główny adres stagingu: **https://creo-cards.vercel.app**.
 Wszystkie polecenia uruchamiaj w **WSL** w katalogu repozytorium.
 
+> **Na stagingu wyłącznie dane testowe** – żadnych prawdziwych klientek (imiona, telefony, alergie) do czasu uruchomienia produkcji. Testowe wpisy oznaczaj np. „Test …”.
+
 ## Stan obecny: bez własnego SMTP
 
 Dopóki domena wysyłkowa **mail.studiocreotarnow.pl** nie jest zweryfikowana w Resend, staging działa **bez własnego SMTP**:

@@ -2,7 +2,61 @@
 
 Dokument dla osoby, która zna technologie webowe, ale nie robiła wcześniej takiego wdrożenia: aplikacji budowanej etapami przez agenta AI, z bazą Supabase, hostingiem Vercel i pracą w WSL. Opisuje **skąd przyszliśmy, gdzie jesteśmy i dokąd zmierzamy**, oraz dlaczego zapadły poszczególne decyzje.
 
-> Stan na: 15.11.2026 – **Etap 1 zaakceptowany** na stagingu (Vercel + Supabase). Następny: Etap 2 – Klientki (plan do akceptacji).
+> Stan na: 15.11.2026, 13:30 – **Etap 1 zamknięty**, poprawka linków („Kontynuuj”, PR #8) scalona, **Etap 2 – Klientki w trakcie** (agent pisze kod).
+
+---
+
+## 0. Najpierw to: cały projekt bez żargonu
+
+Jeśli gubisz się w PR-ach, migracjach i zmiennych – przeczytaj tylko tę sekcję. Reszta dokumentu to szczegóły dla dociekliwych.
+
+### Co budujemy
+Aplikację na telefon dla salonu Creo: kartoteka klientek, receptury farb, zdjęcia fryzur, magazyn farb. Działa jak zwykła aplikacja (ikona na ekranie telefonu), ale technicznie jest stroną internetową – dlatego nie trzeba jej publikować w Google Play ani App Store.
+
+### Kto co robi
+| Kto | Rola | Porównanie |
+|---|---|---|
+| **Ty (Artur)** | Podejmujesz decyzje: akceptujesz plany, sprawdzasz aplikację na telefonie, klikasz rzeczy, których nikt inny nie może (logowanie, linki, domena). | inwestor na budowie |
+| **Agent** (okno terminala ze znakiem `❯`) | Pisze kod, ustawia serwery, poprawia błędy. Zawsze najpierw pokazuje plan i czeka na Twoje „akceptuję”. | ekipa budowlana |
+| **Claude w czacie** | Tłumaczy, co się dzieje, sprawdza plany agenta, przygotowuje Ci gotowe wiadomości do wklejenia agentowi. | kierownik budowy / doradca |
+
+Agent i Claude w czacie **nie widzą się nawzajem** – łączysz ich Ty, wklejając wiadomości.
+
+### Narzędzia – po co każde z nich
+| Narzędzie | Po ludzku | Po co nam |
+|---|---|---|
+| **GitHub** | segregator z całym kodem i historią każdej zmiany | nic nie ginie, każdą zmianę da się cofnąć |
+| **PR** (pull request, np. „PR #7”) | propozycja zmiany do zatwierdzenia | agent nie zmienia aplikacji „po cichu” – każda zmiana to osobna propozycja |
+| **CI** (zielony ptaszek / czerwony krzyżyk) | automatyczny kontroler jakości | przed każdą zmianą sprawdza, czy nic się nie zepsuło i czy dane są dobrze zabezpieczone |
+| **Scalenie** („scal”, „merge”) | zatwierdzenie propozycji | dopiero po scaleniu zmiana trafia do aplikacji |
+| **Vercel** | wynajęty lokal, w którym „stoi” aplikacja | dzięki niemu działa pod adresem `creo-cards.vercel.app` na każdym telefonie |
+| **Supabase** | sejf z kartoteką + recepcja sprawdzająca, kto wchodzi | trzyma dane (w Paryżu, w UE) i obsługuje logowanie |
+| **Migracja** | instrukcja „dobuduj w sejfie nową szufladę” | zmiany w bazie są zapisane i powtarzalne, nikt nie klika ich ręcznie |
+| **Resend** (później) | poczta wychodząca salonu | żeby maile z zaproszeniami dochodziły – wymaga domeny `studiocreotarnow.pl` |
+| **WSL** | warsztat Linuksa wewnątrz Windowsa | tam agent uruchamia narzędzia; Ty prawie nie musisz tam zaglądać |
+| **Staging** | salon próbny z manekinami | tu testujemy; **tylko wymyślone dane**, żadnych prawdziwych klientek |
+| **Produkcja** (później) | prawdziwy salon | osobna, zabezpieczona baza – powstanie przed pilotażem |
+
+### Jak wygląda jeden etap
+1. Agent pokazuje **plan** → wklejasz go Claude'owi w czacie → dostajesz ocenę i gotową odpowiedź.
+2. Wklejasz agentowi „akceptuję” (ewentualnie z poprawkami).
+3. Agent pisze kod i tworzy **PR**; kontroler (CI) sprawdza.
+4. Sprawdzasz na telefonie, czy działa → „scal”.
+5. Etap zamknięty, agent proponuje kolejny.
+
+### Co się wydarzyło do tej pory (po ludzku)
+1. **Opisaliśmy aplikację** – co ma robić, dla kogo, w jakiej kolejności ją budować.
+2. **Postawiliśmy fundament** (Etap 0) – pusta aplikacja z logo „C”, którą da się dodać do ekranu telefonu.
+3. **Uruchomiliśmy ją w internecie** – założenie kont w Vercel i Supabase, wpisanie kluczy, podłączenie bazy. Stąd dużo klikania 14–15.11 – to jednorazowe.
+4. **Zrobiliśmy logowanie i zespół** (Etap 1) – konta tylko z zaproszenia, role właścicielka/uczennica.
+5. **Trafiliśmy na problem z mailami** – bez własnej domeny maile z zaproszeniami nie dochodzą. Obejście: właścicielka wysyła **link** SMS-em lub WhatsAppem.
+6. **Trafiliśmy na problem z linkami** – skanery poczty i podglądy w komunikatorach „klikały” link za człowieka i go zużywały. Naprawione: link otwiera stronę z przyciskiem **„Kontynuuj”**.
+7. **Teraz: klientki** (Etap 2) – lista, wyszukiwanie, szybkie dodawanie z alergiami.
+
+### Co Ty musisz robić, a czego nie
+- **Musisz:** czytać krótkie podsumowania, akceptować plany, testować na telefonie, wklejać wiadomości między czatem a agentem.
+- **Nie musisz:** rozumieć kodu, migracji ani poleceń w terminalu – to robi agent.
+- **Raz, przed pilotażem:** rekordy DNS domeny (dla maili), decyzja o płatnym planie hostingu, przekazanie roli właścicielki Kindze.
 
 ---
 
@@ -53,6 +107,8 @@ GitHub (master) ──────┘   push/merge = automatyczne wdrożenie
 | **Produkcja** | osobny projekt Supabase + docelowo `app.studiocreotarnow.pl` | przed pilotażem |
 
 Do czasu założenia produkcji **główny adres Vercel pełni rolę stagingu**.
+
+> **Na stagingu wyłącznie dane testowe** – żadnych prawdziwych klientek (imiona, telefony, alergie) do czasu uruchomienia produkcji. Testowe wpisy oznaczaj np. „Test …”.
 
 ---
 
@@ -124,6 +180,9 @@ Wdrożenie stagingu według [`WDROZENIE-STAGING.md`](WDROZENIE-STAGING.md):
 - [x] Właścicielka otwiera link, ustawia hasło i loguje się
 - [x] Poprawki po teście (PR #7): „Utwórz link do ustawienia hasła” w Zespole, zaproszenia e-mailem i reset e-mailem ukryte do czasu SMTP (`AUTH_EMAILS_ENABLED`), zachęta do uzupełnienia imienia; dostęp kont zaproszonych e-mailem przywrócony
 - [x] **Kryteria akceptacji Etapu 1** na telefonie: właścicielka i uczennica zalogowane, uczennica nie zarządza zespołem, rejestracja wyłączona, PWA na ekranie głównym – **Etap 1 zaakceptowany (15.11)**
+- [x] `/auth/confirm` z przyciskiem „Kontynuuj” (PR #8) – podglądy linków w SMS/WhatsApp i skanery poczty nie zużywają tokenu
+- [x] Etap 2 – Klientki (PR #9): migracja `clients` na stagingu (`db push --remote`), testy RLS w CI
+- [ ] Kryteria akceptacji Etapu 2 na telefonie: dodanie klientki w < 20 s, wyszukanie po 3 cyfrach telefonu
 
 ---
 
@@ -147,6 +206,8 @@ Wdrożenie stagingu według [`WDROZENIE-STAGING.md`](WDROZENIE-STAGING.md):
 - Własna domena aplikacji, np. `app.studiocreotarnow.pl`.
 - Przekazanie roli właścicielki fryzjerce (**Kinga**) – konto testowe/założycielskie przestaje być właścicielem salonu.
 - Plan Vercel: Hobby jest niekomercyjny – przed użyciem w salonie Pro albo inny hosting.
+- Supabase Pro zamiast Free (Free usypia nieużywane projekty po 7 dniach); łączny koszt z Vercel Pro ok. 200 zł/mies.
+- Region funkcji Vercel przenieść do UE (domyślnie USA) – dane klientek przechodzą przez serwer aplikacji.
 
 ---
 
@@ -167,9 +228,89 @@ npm run bootstrap -- --salon "Creo" --email adres@przyklad.pl --name "Imię" --l
 
 ## 8. Zasady, o których łatwo zapomnieć
 
+- Na stagingu **wyłącznie dane testowe** – prawdziwe klientki dopiero na produkcji.
 - `npm` i `npx` **tylko w WSL**.
 - Zmiany bazy **tylko migracjami** w repo – nigdy klikaniem w panelu Supabase.
 - Klucz **secret/service_role** nigdy w repo, czacie ani w kodzie po stronie przeglądarki.
 - Po zmianie zmiennych w Vercel – **Redeploy**.
 - `db push` zawsze z `--remote`. Przed potwierdzeniem `config push` przejrzyj diff – nie powinno w nim być szablonów e-maili, dopóki nie ma SMTP.
 - Darmowy plan Supabase bez własnego SMTP nie pozwala zmieniać szablonów e-maili – wrócą razem z Resend.
+
+---
+
+## 9. Pełny stos technologiczny
+
+Prosta z wierzchu aplikacja stoi na zestawie narzędzi i praktyk typowym dla profesjonalnych produktów SaaS. Większość tej złożoności to jednorazowa konfiguracja – na co dzień działa sama.
+
+### 9.1 Aplikacja (to, co widzi użytkownik)
+- **Next.js 16** (Turbopack) – framework aplikacji webowej
+- **React** – budowa interfejsu
+- **TypeScript** (strict) – JavaScript z kontrolą typów
+- **Tailwind CSS** – wygląd i układ ekranów
+- **PWA** – manifest, ikony, service worker; instalacja na telefonie jak aplikacja natywna
+- **Server Actions** i **proxy** (dawne middleware) – logika serwerowa i pilnowanie zalogowania
+
+### 9.2 Dane i logowanie
+- **Supabase** – platforma zaplecza (backend-as-a-service), region UE (Paryż, eu-west-3)
+- **PostgreSQL** – relacyjna baza danych
+- **Supabase Auth** – konta, hasła, zaproszenia, blokowanie dezaktywowanych kont
+- **Supabase Storage** – zdjęcia (od Etapu 5)
+- **Row Level Security (RLS)** – reguły dostępu w samej bazie; salon widzi tylko swoje dane
+- **Triggery i funkcje SQL** (`SECURITY DEFINER`) – pilnowanie ról, audytu, miękkiego usuwania
+- **Migracje SQL** – wersjonowane zmiany struktury bazy
+- **Konfiguracja jako kod** – `supabase/config.toml` z blokami `[remotes.*]`, wysyłana `config push` po `config diff`
+- **Generowane typy TypeScript** ze schematu bazy
+
+### 9.3 Jakość i testy
+- **ESLint** – statyczna analiza kodu
+- **TypeScript typecheck** – błędy typów wykrywane przed uruchomieniem
+- **Vitest** – testy jednostkowe (walidacja, wyszukiwanie, przekierowania)
+- **pgTAP** – testy zabezpieczeń bazy (izolacja salonów, role, brak DELETE)
+- **Testy end-to-end** przepływów (zaproszenie → hasło → logowanie → dezaktywacja) na tymczasowym stosie
+
+### 9.4 Kod i współpraca
+- **Git** – kontrola wersji; `.gitattributes` z `eol=lf`
+- **GitHub** – repozytorium, pull requesty, squash merge
+- **GitHub CLI (`gh`)** – obsługa PR z terminala
+- **Workflow etapowy** – gałąź → PR → przegląd → akceptacja → merge
+
+### 9.5 CI/CD – automatyczna kontrola i wdrażanie
+- **GitHub Actions** – lint, typecheck, testy jednostkowe przy każdym PR
+- **Docker** w CI – zadanie `db-test` stawia lokalną kopię Supabase i uruchamia testy RLS
+- **Vercel** – automatyczny build i publikacja po każdym merge
+  - środowiska **Production** i **Preview** (osobny podgląd każdego PR)
+  - zmienne środowiskowe typu **Config** i **Secret**
+  - **Vercel CLI** – zmienne, logi, wdrożenia z terminala
+
+### 9.6 Środowisko pracy
+- **Windows + WSL** (Ubuntu 22.04)
+- **nvm + Node.js 22**
+- **npm** – zależności i skrypty (`dev`, `bootstrap`, `db:test`)
+- **Supabase CLI** – `login`, `link`, `config diff`, `config push`, `db push --remote`
+- **VS Code** – edytor
+- **`.env.local`** – lokalne klucze poza repozytorium
+
+### 9.7 Sztuczna inteligencja w procesie
+- **Claude Code (agent)** – kod, testy, infrastruktura; tryb auto z regułami
+- **Claude w czacie** – architektura, przegląd planów, diagnoza, prowadzenie krok po kroku
+- **AGENTS.md** – reguły pracy agenta (bezpieczeństwo danych, uprawnienia do infrastruktury, WSL)
+
+### 9.8 Dokumentacja
+- `SPEC.md` (wymagania), `ROADMAP.md` (etapy i kryteria), `WDROZENIE-STAGING.md` (runbook), `PRZEWODNIK.md` (dla salonu), `PRZEBIEG-PROJEKTU.md` (historia i decyzje)
+- **Markdown** wersjonowany razem z kodem
+
+### 9.9 Bezpieczeństwo i prywatność
+- Dane w **UE** (RODO); alergie jako dane wrażliwe
+- Konta **tylko z zaproszenia**, publiczna rejestracja wyłączona
+- **Jednorazowe linki** z przyciskiem „Kontynuuj” (odporne na skanery poczty i podglądy w komunikatorach)
+- **Miękkie usuwanie** i pola audytu w każdym rekordzie
+- **Rozdział środowisk** – staging tylko z danymi testowymi; osobna produkcja przed pilotażem
+- Sekrety wyłącznie w zmiennych środowiskowych
+
+### 9.10 Zaplanowane (jeszcze nie wdrożone)
+- **Resend** (SMTP) z domeną `mail.studiocreotarnow.pl` i rekordami DNS (SPF, DKIM)
+- **API rozpoznawania mowy** (np. Whisper) – notatki głosowe
+- **Produkcyjny projekt Supabase** z backupami i Point-in-Time Recovery
+- **Własna domena** aplikacji (`app.studiocreotarnow.pl`)
+- **Region funkcji Vercel w UE** (np. Frankfurt) przed produkcją
+- **Płatne plany** do użytku komercyjnego: Vercel Pro (ok. 20 USD/mies.), Supabase Pro (ok. 25 USD/mies.) – łącznie ok. 200 zł/mies. na salon
