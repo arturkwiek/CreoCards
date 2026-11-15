@@ -134,3 +134,21 @@ Skrypt zakłada salon (lub używa istniejącego) i zaproszenie właścicielki. P
 
 - Testy RLS uruchamia CI (zadanie `db-test`: `supabase start` + `supabase test db`).
 - Lokalnie (opcjonalnie): `npx supabase start` + `npm run db:test`. Wymaga Dockera z siecią bridge.
+
+## Backup poza Supabase (Etap 4a)
+
+Workflow `.github/workflows/backup.yml` co noc (02:15 / 03:15 czasu polskiego) i na żądanie (Actions → Backup → Run workflow):
+zrzut bazy (role, schemat, dane z kontami `auth`) → szyfrowanie **age** → Backblaze B2 (EU Central). Pliki Storage – osobny krok (pomijany bez bucketów).
+Przywracanie: `docs/PRZYWRACANIE.md`.
+
+| Nazwa | Rodzaj (GitHub → Settings → Secrets and variables → Actions) | Wartość |
+|---|---|---|
+| `STAGING_DB_URL` | secret | Supabase → Connect → Session pooler (port 5432), z hasłem bazy |
+| `B2_KEY_ID`, `B2_APPLICATION_KEY` | secret | klucz B2 z dostępem tylko do bucketu backupów (Read and Write) |
+| `B2_BUCKET` | variable | `creocards-backup-staging` (Object Lock: Governance 30 dni; Lifecycle: hide 30 dni, delete po 1 dniu) |
+| `B2_ENDPOINT` | variable | np. `s3.eu-central-003.backblazeb2.com` |
+| `AGE_RECIPIENT` | variable | klucz **publiczny** age (`age1…`); prywatny tylko u właściciela projektu |
+| `STAGING_STORAGE_S3_ENDPOINT`, `STAGING_STORAGE_S3_KEY_ID`, `STAGING_STORAGE_S3_SECRET` | secret | od Etapu 5: Supabase → Storage → S3 Connection |
+
+Sekrety ustawiaj zawsze z nazwą repozytorium: `gh secret set NAZWA --repo arturkwiek/CreoCards` (wartość wpisujesz, nie jest widoczna).
+CI (`db-test`) przy każdym PR sprawdza skrypty backupu na lokalnej bazie z kluczem testowym (zrzut → szyfrowanie → odszyfrowanie → weryfikacja).
