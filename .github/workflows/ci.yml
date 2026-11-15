@@ -37,13 +37,14 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Lokalny Supabase – baza + Auth (schemat auth.users), migracje z supabase/migrations
-        run: npx supabase start -x realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+      - name: Lokalny Supabase – baza + Auth + Storage (schematy auth i storage jak na projekcie), migracje z supabase/migrations
+        run: npx supabase start -x realtime,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - name: Testy RLS (pgTAP)
         run: npx supabase test db
       - name: Test skryptów backupu (lokalna baza, klucz testowy, bez wysyłki)
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq age postgresql-client >/dev/null
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -X -q -v ON_ERROR_STOP=1 -f scripts/backup/ci-seed.sql
           age-keygen -o "$RUNNER_TEMP/test.agekey" 2>/dev/null
           mkdir -p "$RUNNER_TEMP/backup-out"
           DB_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
@@ -51,3 +52,14 @@ jobs:
           BACKUP_PREFIX=ci BACKUP_SKIP_UPLOAD=1 BACKUP_OUT_DIR="$RUNNER_TEMP/backup-out" \
             bash scripts/backup/backup.sh
           bash scripts/backup/decrypt-backup.sh "$(ls "$RUNNER_TEMP"/backup-out/*.tar.gz.age)" "$RUNNER_TEMP/test.agekey" "$RUNNER_TEMP/restore"
+      - name: Test przywracania (czysta baza Supabase bez migracji, rola postgres bez superusera)
+        run: |
+          # Czysta baza jak nowy projekt: reset z pustym katalogiem migracji (Auth i Storage odtwarzają swoje schematy).
+          mkdir -p "$RUNNER_TEMP/fresh/supabase/migrations"
+          cp supabase/config.toml "$RUNNER_TEMP/fresh/supabase/"
+          npx supabase db reset --local --no-seed --workdir "$RUNNER_TEMP/fresh"
+          TARGET_DB_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+          test "$(psql "$TARGET_DB_URL" -X -At -c "select rolsuper from pg_roles where rolname = current_user")" = f || { echo "BŁĄD: rola postgres jest superuserem – test nie odpowiada projektowi Supabase"; exit 1; }
+          test "$(psql "$TARGET_DB_URL" -X -At -c "select to_regclass('public.clients') is null and to_regclass('storage.objects') is not null")" = t || { echo "BŁĄD: baza docelowa nie jest czysta albo brak schematu storage"; exit 1; }
+          echo "Prawo INSERT roli postgres do storage.buckets_vectors (na projekcie Supabase: f): $(psql "$TARGET_DB_URL" -X -At -c "select coalesce((select has_table_privilege('storage.buckets_vectors', 'INSERT') where to_regclass('storage.buckets_vectors') is not null)::text, 'brak tabeli')")"
+          TARGET_DB_URL="$TARGET_DB_URL" bash scripts/backup/restore-db.sh "$(ls -d "$RUNNER_TEMP"/restore/creocards-ci-db-*)"

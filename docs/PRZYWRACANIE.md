@@ -18,6 +18,10 @@ Instrukcja na wypadek utraty lub uszkodzenia danych. Polecenia uruchamiasz w **W
 - **RTO (czas przywrócenia):** ok. 1–2 godzin, łącznie z założeniem nowego projektu Supabase i przełączeniem Vercel.
 - **Po przywróceniu:** konta i hasła działają jak wcześniej, ale wszyscy muszą zalogować się ponownie (nowy projekt ma nowe klucze sesji).
 
+### Co obejmuje kopia danych
+
+Cały schemat `public` oraz z tabel zarządzanych przez Supabase tylko te z `scripts/backup/data-allowlist.txt`: `auth.users`, `auth.identities`, `storage.buckets`, `storage.objects`. Pozostałe (sesje, tokeny, logi Auth, multipart, `storage.buckets_vectors`, `storage.vector_indexes` i inne) to dane wewnętrzne – nowy projekt tworzy je sam, a rola `postgres` często nie ma do nich prawa zapisu. Backup przerywa się, gdy pojawią się dane MFA, passkeys, SSO lub OAuth (tabele z `identity-guard.sql`), żeby nic nie zginęło po cichu. CI przy każdym PR robi kopię lokalnej bazy i przywraca ją na czystej bazie Supabase jako `postgres` bez superusera.
+
 ## 1. Przygotowanie (jednorazowo)
 
 ```bash
@@ -65,23 +69,18 @@ Skrypt:
    read -rs TARGET_DB_URL && export TARGET_DB_URL    # wklej adres i Enter (nie będzie widoczny)
    R=~/creocards-restore/creocards-staging-db-RRRRMMDDTGGMMSSZ
    ```
-3. **Odtworzenie bazy** – role, schemat i dane w jednej transakcji; przy pierwszym błędzie nic nie zostaje zapisane:
+3. **Odtworzenie bazy i porównanie liczby wierszy** – role, schemat i dane w jednej transakcji (przy pierwszym błędzie nic nie zostaje zapisane), potem porównanie z chwilą kopii:
    ```bash
-   psql "$TARGET_DB_URL" --single-transaction --variable ON_ERROR_STOP=1 \
-     --file "$R/roles.sql" \
-     --file "$R/schema.sql" \
-     --command 'SET session_replication_role = replica' \
-     --file "$R/data.sql"
+   bash scripts/backup/restore-db.sh "$R"
    ```
+   Oczekiwany koniec: `Przywrócono.` i `Liczby wierszy: ZGODNE`. Wynik psql jest w `$R/restore.log` (zawiera tylko komunikaty, nie dane).
 4. **Historia migracji** (kopia danych jej nie zawiera) – oznacz migracje z manifestu jako zastosowane, żeby kolejne `db push` nie próbowały ich powtórzyć:
    ```bash
    VERSIONS=$(grep '^migrations=' "$R/manifest.txt" | cut -d= -f2 | tr ',' ' ')
    npx supabase migration repair --status applied $VERSIONS --remote="$TARGET_DB_URL"
    ```
-5. **Porównanie liczby wierszy** z chwilą kopii – obie tabele muszą być identyczne:
-   ```bash
-   psql "$TARGET_DB_URL" -X -q -At -F $'\t' -f scripts/backup/row-counts.sql | diff - "$R/row-counts.tsv" && echo "Liczby wierszy: ZGODNE"
-   ```
+5. **Konta:** kopia zawiera `auth.users` i `auth.identities` (logowanie e-mailem i loginem działa tymi samymi hasłami), ale nie sesje – wszyscy logują się ponownie.
+
 6. **Konfiguracja Auth:** w `supabase/config.toml` w bloku `[remotes.staging]` (albo produkcji) zmień `project_id` na nowy, potem `npx supabase link --project-ref <nowy>`, `npx supabase config diff` i `npx supabase config push`.
 7. **Przełączenie aplikacji:** w Vercel podmień `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` i `SUPABASE_SERVICE_ROLE_KEY` (sensitive) na klucze nowego projektu, a w GitHub sekret `STAGING_DB_URL`. Następnie **Redeploy**.
 8. **Lista kontrolna**, potem sprzątanie:
@@ -129,5 +128,6 @@ Próba odtwarza scenariusz A na **tymczasowym projekcie** `creocards-restore-tes
 | `suma SHA-256 … się nie zgadza` | plik pobrał się niecały – pobierz ponownie albo weź kopię z poprzedniej nocy |
 | `age: no identity matched any of the recipients` | zły klucz – kopia zaszyfrowana innym kluczem publicznym (sprawdź `AGE_RECIPIENT` w GitHub) |
 | `psql: … role "…" already exists` przy `roles.sql` | na nowym projekcie role Supabase już są – to ostrzeżenie; jeśli przerywa transakcję, usuń z `roles.sql` linie `CREATE ROLE` dla istniejących ról i powtórz krok 3 |
+| `permission denied for table …` przy `data.sql` | kopia zawiera tabelę wewnętrzną Supabase – zrób nową kopię aktualnym skryptem (lista dozwolonych tabel); stare kopie sprzed poprawki przywracaj po usunięciu z `data.sql` bloków `COPY` dla tej tabeli |
 | `relation … already exists` | projekt docelowy nie był pusty – użyj nowego, pustego projektu |
 | Workflow `Backup` czerwony | GitHub → Actions → Backup → log kroku; najczęściej wygasły sekret (`STAGING_DB_URL`, `B2_*`) – ustaw go ponownie `gh secret set … --repo arturkwiek/CreoCards` |

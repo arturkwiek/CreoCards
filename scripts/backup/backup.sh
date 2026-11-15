@@ -26,11 +26,21 @@ WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 DIR="$WORK/$NAME"
 mkdir -p "$DIR"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+ALLOW="$(grep -vE '^\s*(#|$)' "$HERE/data-allowlist.txt" | paste -sd, -)"
 
 echo "Zrzut bazy (${BACKUP_PREFIX})…"
 npx supabase db dump --remote="$DB_URL" --role-only -f "$DIR/roles.sql" >/dev/null
 npx supabase db dump --remote="$DB_URL" -f "$DIR/schema.sql" >/dev/null
-npx supabase db dump --remote="$DB_URL" --data-only --use-copy -f "$DIR/data.sql" >/dev/null
+# Dane: cały schemat public + lista dozwolonych tabel zarządzanych przez Supabase (data-allowlist.txt).
+# Pozostałe tabele auth/storage/… (sesje, tokeny, logi, kolejki, buckets_vectors, vector_indexes itd.)
+# są wewnętrzne – na nowym projekcie rola postgres często nie ma do nich prawa zapisu, a Supabase odtwarza je sam.
+# Lista budowana z bazy przy każdym zrzucie, więc nowe tabele Supabase są pomijane automatycznie.
+EXCLUDE="$(psql "$DB_URL" -X -q -At -v ON_ERROR_STOP=1 -v allow="$ALLOW" -f "$HERE/data-excluded.sql" | paste -sd, -)"
+# Zabezpieczenie: dane tożsamości, których kopia nie obejmuje (MFA, SSO, OAuth) – jeśli się pojawią, backup ma się nie udać.
+LOST="$(psql "$DB_URL" -X -q -At -v ON_ERROR_STOP=1 -f "$HERE/identity-guard.sql")"
+[ -z "$LOST" ] || fail "tabele z danymi tożsamości spoza kopii nie są puste: $LOST – dopisz je do data-allowlist.txt i sprawdź przywracanie"
+npx supabase db dump --remote="$DB_URL" --data-only --use-copy ${EXCLUDE:+--exclude "$EXCLUDE"} -f "$DIR/data.sql" >/dev/null
 
 for f in roles.sql schema.sql data.sql; do
   [ -s "$DIR/$f" ] || fail "pusty plik $f"
@@ -38,9 +48,16 @@ done
 grep -q 'CREATE TABLE "public"."clients"\|CREATE TABLE IF NOT EXISTS "public"."clients"' "$DIR/schema.sql" || fail "schemat bez tabeli clients"
 grep -q 'COPY "auth"."users"' "$DIR/data.sql" || fail "dane bez kont (auth.users)"
 grep -q 'COPY "public"."clients"' "$DIR/data.sql" || fail "dane bez tabeli clients"
+for t in '"storage"."buckets"' '"storage"."objects"' '"auth"."identities"'; do
+  grep -q "COPY $t" "$DIR/data.sql" || fail "dane bez tabeli $t"
+done
+# Żadna tabela spoza public i listy dozwolonych nie może trafić do danych.
+EXTRA="$(grep -oE '^COPY "[a-z_]+"\."[a-z_]+"' "$DIR/data.sql" | sed -E 's/^COPY "([a-z_]+)"\."([a-z_]+)"/\1.\2/' \
+  | grep -v '^public\.' | grep -vxF -f <(tr , '\n' <<<"$ALLOW") || true)"
+[ -z "$EXTRA" ] || fail "w danych tabele spoza listy dozwolonych: $(paste -sd' ' <<<"$EXTRA")"
 
 # Liczby wierszy – do porównania po przywróceniu (bez danych osobowych).
-psql "$DB_URL" -X -q -At -F $'\t' -v ON_ERROR_STOP=1 -f "$(dirname "$0")/row-counts.sql" >"$DIR/row-counts.tsv"
+psql "$DB_URL" -X -q -At -F $'\t' -v ON_ERROR_STOP=1 -f "$HERE/row-counts.sql" >"$DIR/row-counts.tsv"
 
 {
   echo "created_at=$STAMP"
