@@ -33,7 +33,7 @@ fi
 mkdir -p "$OUT"
 age -d -i "$KEY" -o "$OUT/$BASE.tar.gz" "$FILE"
 if [ -f "$SUMS" ]; then
-  expected="$(grep " $BASE.tar.gz\$" "$SUMS" | cut -d' ' -f1)"
+  expected="$(grep " $BASE.tar.gz\$" "$SUMS" | cut -d' ' -f1 || true)"
   actual="$(sha256sum "$OUT/$BASE.tar.gz" | cut -d' ' -f1)"
   [ -z "$expected" ] || [ "$expected" = "$actual" ] || fail "suma SHA-256 po odszyfrowaniu się nie zgadza"
 fi

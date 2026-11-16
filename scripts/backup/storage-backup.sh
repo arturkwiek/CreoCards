@@ -55,8 +55,12 @@ EXPECTED="$(psql "$DB_URL" -X -q -At -v ON_ERROR_STOP=1 -c "select count(*) from
 (cd "$WORK/$NAME" && find . -type f ! -path ./files.sha256 -print0 | sort -z | xargs -0 -r sha256sum >files.sha256)
 
 tar -C "$WORK" -czf "$WORK/$NAME.tar.gz" "$NAME"
+PLAIN_SHA="$(sha256sum "$WORK/$NAME.tar.gz" | cut -d' ' -f1)"
 age -r "$AGE_RECIPIENT" -o "$WORK/$NAME.tar.gz.age" "$WORK/$NAME.tar.gz"
-sha256sum "$WORK/$NAME.tar.gz.age" | sed "s#  .*#  $NAME.tar.gz.age#" >"$WORK/$NAME.sha256"
+ENC_SHA="$(sha256sum "$WORK/$NAME.tar.gz.age" | cut -d' ' -f1)"
+printf '%s  %s
+%s  %s
+' "$ENC_SHA" "$NAME.tar.gz.age" "$PLAIN_SHA" "$NAME.tar.gz" >"$WORK/$NAME.sha256"
 SIZE="$(stat -c %s "$WORK/$NAME.tar.gz.age")"
 echo "Storage: ${#BUCKETS[@]} bucket(y), $COUNT plik(ów), zaszyfrowano $NAME.tar.gz.age ($SIZE B)"
 

@@ -90,7 +90,7 @@ Skrypt:
    - [ ] karta klientki: wizyty i skrót receptury zgodne z ostatnim stanem;
    - [ ] katalog i usługi na miejscu;
    - [ ] Kosz i Historia zmian działają;
-   - [ ] zdjęcia otwierają się (od Etapu 5, po kroku 5 poniżej);
+   - [ ] zdjęcia otwierają się (miniatury na osi czasu i pełne zdjęcie), w tym zdjęcie kontrolne z §5;
    - [ ] ręczne uruchomienie workflow `Backup` na nowym projekcie kończy się sukcesem.
 
    ```bash
@@ -100,27 +100,29 @@ Skrypt:
 
 ## 5. Pliki Storage (zdjęcia, nagrania – od Etapu 5)
 
-1. Pobierz z B2 najnowszy plik z `staging/storage/` i odszyfruj go tym samym skryptem (krok 3). Pliki trafią do `~/creocards-restore/creocards-staging-storage-…/<bucket>/…`.
-2. W nowym projekcie utwórz te same buckety (prywatne) – zrobi to migracja Etapu 5. Wygeneruj klucze S3: Storage → S3 Connection → New access key.
-3. Wyślij pliki (wartości podaj z klawiatury, nie zapisuj ich w plikach):
-   ```bash
-   read -r  STORAGE_S3_ENDPOINT && read -r STORAGE_S3_KEY_ID && read -rs STORAGE_S3_SECRET
-   export RCLONE_CONFIG_SUPA_TYPE=s3 RCLONE_CONFIG_SUPA_PROVIDER=Other RCLONE_CONFIG_SUPA_FORCE_PATH_STYLE=true \
-     RCLONE_CONFIG_SUPA_ENDPOINT="$STORAGE_S3_ENDPOINT" RCLONE_CONFIG_SUPA_ACCESS_KEY_ID="$STORAGE_S3_KEY_ID" \
-     RCLONE_CONFIG_SUPA_SECRET_ACCESS_KEY="$STORAGE_S3_SECRET"
-   S=~/creocards-restore/creocards-staging-storage-RRRRMMDDTGGMMSSZ
-   for b in "$S"/*/; do rclone copy "$b" "supa:$(basename "$b")"; done
-   ```
+Kopia bazy zawiera buckety, wpisy `storage.objects` i polityki Storage (`storage-policies.sql`, odtwarzane przez `restore-db.sh`). Same pliki są w osobnej kopii `staging/storage/` z manifestem sum SHA-256 (`files.sha256`).
 
-## 6. Próba przywrócenia (kryterium akceptacji Etapu 4a, potem raz na kwartał)
+1. Pobierz z B2 z `staging/storage/` parę plików z tej samej nocy co kopia bazy (`…storage-RRRRMMDDTGGMMSSZ.tar.gz.age` i `.sha256`) i odszyfruj tym samym skryptem (krok 3). Skrypt sprawdzi też sumy wszystkich plików. Pliki trafią do `~/creocards-restore/creocards-staging-storage-…/<bucket>/…`.
+2. W nowym projekcie: Storage → S3 Connection → **New access key**; zanotuj adres (Endpoint) i region projektu.
+3. Wyślij pliki i sprawdź je (wartości wpisz z klawiatury – nie trafią do historii ani do plików):
+   ```bash
+   sudo apt install -y rclone   # raz
+   read -r STORAGE_S3_ENDPOINT && read -r STORAGE_S3_KEY_ID && read -rs STORAGE_S3_SECRET
+   export STORAGE_S3_ENDPOINT STORAGE_S3_KEY_ID STORAGE_S3_SECRET STORAGE_S3_REGION=eu-west-3
+   bash scripts/backup/restore-storage.sh ~/creocards-restore/creocards-staging-storage-RRRRMMDDTGGMMSSZ
+   ```
+   Skrypt wysyła wszystkie pliki, pobiera je z powrotem i porównuje z kopią, a jedno zdjęcie sprawdza sumą SHA-256. Oczekiwany koniec: `Zdjęcie kontrolne: suma SHA-256 zgodna.`, adres wizyty do otwarcia w aplikacji i `Przywrócono pliki Storage: N – ZGODNE z kopią.`
+4. Usuń klucz S3 projektu docelowego, jeśli nie będzie potrzebny (Storage → S3 Connection), i `unset STORAGE_S3_SECRET`.
+
+## 6. Próba przywrócenia (kryterium akceptacji Etapów 4a i 5, potem raz na kwartał)
 
 Próba odtwarza scenariusz A na **tymczasowym projekcie** `creocards-restore-test` (plan Free, region EU), żeby nie nadpisywać działającego stagingu:
 
-1. Uruchom ręcznie workflow `Backup` (GitHub → Actions → Backup → Run workflow) i poczekaj na zielony status.
-2. Kroki 2–5 i 8 (bez kroków 6–7: aplikacja zostaje na dotychczasowym stagingu). Zmierz czas od pobrania pliku do „Liczby wierszy: ZGODNE”.
-3. Opcjonalnie podłącz lokalnie aplikację do projektu próbnego (`.env.local` z jego kluczami) i przejdź listę kontrolną.
+1. Uruchom ręcznie workflow `Backup` (GitHub → Actions → Backup → Run workflow) i poczekaj na zielony status – obie kopie: baza i pliki.
+2. Kroki 2–5 i 8 z §4 (bez kroków 6–7: aplikacja zostaje na dotychczasowym stagingu) oraz §5 – pliki Storage. Zmierz czas od pobrania plików do „Przywrócono pliki Storage: … ZGODNE”.
+3. Podłącz lokalnie aplikację do projektu próbnego (`.env.local` z jego kluczami) i przejdź listę kontrolną – w tym **otwarcie odtworzonego zdjęcia** (adres wizyty wypisuje `restore-storage.sh`).
 4. Usuń projekt próbny w panelu Supabase (Settings → General → Delete project) i katalog `~/creocards-restore`.
-5. Zapisz wynik w `docs/PRZEBIEG-PROJEKTU.md`: data, nazwa kopii, czas przywrócenia, ewentualne problemy.
+5. Zapisz wynik w `docs/PRZEBIEG-PROJEKTU.md`: data, nazwy kopii, czas przywrócenia, ewentualne problemy.
 
 ## 7. Gdy coś nie działa
 
