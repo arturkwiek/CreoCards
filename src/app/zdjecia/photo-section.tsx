@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { buttonStyles } from "@/components/styles";
 import { PhotoError, processPhoto } from "@/lib/photos/process";
 import { consentStep, PHOTO_BUCKET } from "@/lib/photos/photo";
@@ -38,6 +38,37 @@ export function PhotoSection({
   const [open, setOpen] = useState<PhotoThumb | null>(null);
   const keyRef = useRef(0);
   const close = useCallback(() => setOpen(null), []);
+  const cameraId = useId();
+  const galleryId = useId();
+  const [cameraDenied, setCameraDenied] = useState(false);
+  const [cameraHint, setCameraHint] = useState(false);
+
+  // Zablokowany aparat dla strony (Chrome/Opera/Edge) – komunikat zamiast „nic się nie dzieje”.
+  useEffect(() => {
+    let status: PermissionStatus | undefined;
+    navigator.permissions
+      ?.query({ name: "camera" as PermissionName })
+      .then((s) => {
+        status = s;
+        setCameraDenied(s.state === "denied");
+        s.onchange = () => setCameraDenied(s.state === "denied");
+      })
+      .catch(() => {
+        // Przeglądarka nie zna uprawnienia „camera” (np. Firefox, starsze Safari) – bez komunikatu.
+      });
+    return () => {
+      if (status) status.onchange = null;
+    };
+  }, []);
+
+  // Zamknięcie aparatu/wyboru bez zdjęcia (zdarzenie „cancel”) – podpowiedź, co zrobić, gdy aparat się nie otworzył.
+  useEffect(() => {
+    const input = cameraRef.current;
+    if (!input) return;
+    const onCancel = () => setCameraHint(true);
+    input.addEventListener("cancel", onCancel);
+    return () => input.removeEventListener("cancel", onCancel);
+  });
 
   useEffect(() => {
     if (justSaved) sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -88,6 +119,7 @@ export function PhotoSection({
 
   function onFiles(list: FileList | null) {
     const files = [...(list ?? [])];
+    setCameraHint(false);
     if (cameraRef.current) cameraRef.current.value = "";
     if (galleryRef.current) galleryRef.current.value = "";
     if (files.length === 0) return;
@@ -185,16 +217,49 @@ export function PhotoSection({
       )}
 
       {canAdd && !pending && (
-        <div className="grid grid-cols-2 gap-2">
-          <button type="button" onClick={() => cameraRef.current?.click()} className={buttonStyles.primary}>
+        <div className={justSaved ? "flex flex-col gap-2" : "grid grid-cols-2 gap-2"}>
+          {/*
+            Przyciski to <label> dla pól pliku – przeglądarka otwiera aparat/wybór pliku bezpośrednio z dotknięcia
+            (bez programowego click(), które np. Opera na Androidzie ignoruje). Gdy przeglądarka pominie „capture”,
+            otworzy się zwykły wybór pliku (z opcją aparatu).
+          */}
+          <label
+            htmlFor={cameraId}
+            className={`${buttonStyles.primary} cursor-pointer ${justSaved ? "h-16 text-lg" : ""}`}
+          >
             Zrób zdjęcie
-          </button>
-          <button type="button" onClick={() => galleryRef.current?.click()} className={buttonStyles.secondary}>
+          </label>
+          <label htmlFor={galleryId} className={`${buttonStyles.secondary} cursor-pointer`}>
             Z galerii
-          </button>
-          <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => onFiles(e.target.files)} />
-          <input ref={galleryRef} type="file" accept="image/*" multiple hidden onChange={(e) => onFiles(e.target.files)} />
+          </label>
+          <input
+            ref={cameraRef}
+            id={cameraId}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="sr-only"
+            tabIndex={-1}
+            onChange={(e) => onFiles(e.target.files)}
+          />
+          <input
+            ref={galleryRef}
+            id={galleryId}
+            type="file"
+            accept="image/*"
+            multiple
+            className="sr-only"
+            tabIndex={-1}
+            onChange={(e) => onFiles(e.target.files)}
+          />
         </div>
+      )}
+      {canAdd && !pending && (cameraDenied || cameraHint) && (
+        <p role="status" className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:bg-amber-950 dark:text-amber-50">
+          {cameraDenied
+            ? "Aparat jest zablokowany dla tej strony. Zezwól na aparat w ustawieniach przeglądarki (ikona kłódki przy adresie → Uprawnienia → Aparat) albo użyj „Z galerii” – tam też można wybrać aparat."
+            : "Nie dodano zdjęcia. Jeśli aparat się nie otworzył, sprawdź uprawnienia do aparatu w ustawieniach przeglądarki albo użyj „Z galerii” – tam też można wybrać aparat."}
+        </p>
       )}
 
       {open && <PhotoViewer photo={open} canDelete={canAdd} onClose={close} />}
