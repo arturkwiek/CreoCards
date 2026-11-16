@@ -122,7 +122,11 @@ $$, '42501', null, 'niepoprawna nazwa pliku odrzucona');
 
 select is((select count(*)::int from storage.objects where bucket_id = 'photos'), 1, 'uczennica widzi plik zapisanego zdjęcia');
 select is(pg_temp.affected($$update storage.objects set name = name || '.x' where bucket_id = 'photos'$$), 0, 'pliku nie da się zmienić');
-select is(pg_temp.affected($$delete from storage.objects where bucket_id = 'photos'$$), 0, 'pliku nie da się usunąć');
+-- Usuwanie idzie przez API Storage, które stosuje RLS: dla bucketu photos nie ma polityki DELETE/UPDATE.
+select is((select count(*)::int from pg_policies
+  where schemaname = 'storage' and tablename = 'objects' and cmd in ('DELETE', 'UPDATE', 'ALL')
+    and (coalesce(qual, '') || coalesce(with_check, '')) like '%photos%'),
+  0, 'pliku nie da się usunąć ani nadpisać (brak polityk DELETE/UPDATE)');
 select throws_ok($$delete from public.attachments$$, '42501', null, 'brak twardego usuwania zdjęć');
 
 -- Do kosza i (bez) przywracania
