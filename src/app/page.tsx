@@ -7,7 +7,9 @@ import { LOGIN_PATH } from "@/lib/auth/paths";
 import { getSession } from "@/lib/auth/session";
 import { greeting, needsFullName } from "@/lib/profile/name";
 import { ROLE_LABELS } from "@/lib/validation";
+import { photosWord } from "@/lib/photos/photo";
 import { countOpenRequests } from "./katalog/data";
+import { countPhotosWithoutConsent } from "./zdjecia/data";
 import { NamePrompt } from "./name-prompt";
 
 function requestsWord(n: number): string {
@@ -36,7 +38,8 @@ async function HomeContent() {
 
   const { user } = session;
   // Powiadomienie właścicielki o zgłoszeniach „Zgłoś brak”.
-  const openRequests = user.role === "owner" ? await countOpenRequests() : 0;
+  const [openRequests, noConsent] =
+    user.role === "owner" ? await Promise.all([countOpenRequests(), countPhotosWithoutConsent()]) : [0, 0];
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -46,6 +49,15 @@ async function HomeContent() {
       </div>
 
       {needsFullName(user.fullName) && <NamePrompt />}
+
+      {noConsent > 0 && (
+        <Link
+          href="/zdjecia/bez-zgody"
+          className="rounded-xl border border-amber-500/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-950 dark:bg-amber-950 dark:text-amber-50"
+        >
+          Zdjęcia bez zgody: {noConsent} {photosWord(noConsent)} – sprawdź →
+        </Link>
+      )}
 
       <Link href="/klientki" className={buttonStyles.primary}>
         Klientki

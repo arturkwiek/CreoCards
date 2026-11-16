@@ -5,7 +5,9 @@ import { requireOwner } from "@/lib/auth/session";
 import { formatPhone } from "@/lib/clients/phone";
 import { createClient } from "@/lib/supabase/server";
 import { formatVisitDate } from "@/lib/visits/time";
+import type { TrashKind } from "../historia/actions";
 import { RestoreFromTrashButton } from "../historia/restore-button";
+import { signThumbs } from "../zdjecia/data";
 import { getServiceNames, getTeamNames } from "../wizyty/data";
 
 export const metadata: Metadata = { title: "Kosz – CreoCards" };
@@ -14,11 +16,12 @@ const TABS = [
   { key: "klientki", label: "Klientki" },
   { key: "wizyty", label: "Wizyty" },
   { key: "produkty", label: "Produkty" },
+  { key: "zdjecia", label: "Zdjęcia" },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
 /** Kto usunął – ostatni wpis „delete” w historii (dla wierszy z audytem). */
-async function deletedBy(table: "clients" | "visits" | "products", ids: string[]): Promise<Map<string, string>> {
+async function deletedBy(table: "clients" | "visits" | "products" | "attachments", ids: string[]): Promise<Map<string, string>> {
   if (ids.length === 0) return new Map();
   const supabase = await createClient();
   const { data } = await supabase
@@ -31,7 +34,7 @@ async function deletedBy(table: "clients" | "visits" | "products", ids: string[]
   return new Map((data ?? []).filter((e) => e.row_id && e.created_by).map((e) => [e.row_id as string, e.created_by as string]));
 }
 
-type Item = { id: string; title: string; detail: string; deletedAt: string; by?: string };
+type Item = { id: string; title: string; detail: string; deletedAt: string; by?: string; thumbUrl?: string | null };
 
 async function TrashContent({ searchParams }: { searchParams: PageProps<"/kosz">["searchParams"] }) {
   await requireOwner();
@@ -40,7 +43,7 @@ async function TrashContent({ searchParams }: { searchParams: PageProps<"/kosz">
   const supabase = await createClient();
   const names = await getTeamNames();
   let items: Item[] = [];
-  let kind: "client" | "visit" | "product" = "client";
+  let kind: TrashKind = "client";
 
   if (tab === "klientki") {
     const { data } = await supabase
@@ -73,6 +76,27 @@ async function TrashContent({ searchParams }: { searchParams: PageProps<"/kosz">
       deletedAt: v.deleted_at!,
       by: by.get(v.id),
     }));
+  } else if (tab === "zdjecia") {
+    kind = "photo";
+    const { data } = await supabase
+      .from("attachments")
+      .select("id, client_id, visit_id, thumb_path, deleted_at, clients(full_name), visits(visit_at)")
+      .not("deleted_at", "is", null)
+      .order("deleted_at", { ascending: false })
+      .limit(200);
+    const rows = data ?? [];
+    const [urls, by] = await Promise.all([
+      signThumbs(rows.map((r) => r.thumb_path)),
+      deletedBy("attachments", rows.map((r) => r.id)),
+    ]);
+    items = rows.map((r) => ({
+      id: r.id,
+      title: r.clients?.full_name ?? "Klientka",
+      detail: r.visits ? `Wizyta ${formatVisitDate(r.visits.visit_at)}` : "",
+      deletedAt: r.deleted_at!,
+      by: by.get(r.id),
+      thumbUrl: urls.get(r.thumb_path) ?? null,
+    }));
   } else {
     kind = "product";
     const { data } = await supabase
@@ -92,7 +116,7 @@ async function TrashContent({ searchParams }: { searchParams: PageProps<"/kosz">
 
   return (
     <>
-      <nav className="flex gap-2" aria-label="Rodzaj">
+      <nav className="flex flex-wrap gap-2" aria-label="Rodzaj">
         {TABS.map((t) => (
           <Link
             key={t.key}
@@ -112,6 +136,10 @@ async function TrashContent({ searchParams }: { searchParams: PageProps<"/kosz">
         <ul className="flex flex-col gap-2">
           {items.map((item) => (
             <li key={item.id} className="flex flex-col gap-2 rounded-xl border border-foreground/10 p-4">
+              {item.thumbUrl && (
+                // eslint-disable-next-line @next/next/no-img-element -- podpisany link, bez optymalizacji Next
+                <img src={item.thumbUrl} alt="" loading="lazy" className="h-24 w-24 rounded-lg object-cover" />
+              )}
               <div>
                 <p className="font-medium">{item.title}</p>
                 {item.detail && <p className="text-sm text-foreground/60">{item.detail}</p>}
@@ -139,7 +167,7 @@ export default function TrashPage({ searchParams }: PageProps<"/kosz">) {
         </Link>
       </div>
       <p className="text-sm text-foreground/60">
-        Usunięte klientki, wizyty i produkty – dane zostają w bazie i można je przywrócić. Widoczne tylko dla właścicielki.
+        Usunięte klientki, wizyty, produkty i zdjęcia – dane zostają w bazie i można je przywrócić. Widoczne tylko dla właścicielki.
       </p>
       <Suspense fallback={<p className="text-foreground/60">Ładowanie…</p>}>
         <TrashContent searchParams={searchParams} />

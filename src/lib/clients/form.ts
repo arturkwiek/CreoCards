@@ -1,4 +1,5 @@
 import { isValidEmail, normalizeEmail } from "@/lib/validation";
+import { fromWarsawLocal, toWarsawLocal } from "@/lib/visits/time";
 import { normalizePhone } from "./phone";
 
 export const CLIENT_NAME_MAX = 120;
@@ -16,9 +17,13 @@ export type ClientFormValues = {
   note: string;
   rodo_consent: boolean;
   notifications_consent: boolean;
+  /** Zgoda na zdjęcia z wizerunkiem: data „RRRR-MM-DD” (Warszawa) albo pusto = brak zgody. */
+  photo_consent_date: string;
 };
 
-export type ClientFormErrors = Partial<Record<"full_name" | "phone" | "allergy_status" | "email" | "allergies" | "note", string>>;
+export type ClientFormErrors = Partial<
+  Record<"full_name" | "phone" | "allergy_status" | "email" | "allergies" | "note" | "photo_consent_date", string>
+>;
 
 /** Dane gotowe do zapisu (bez zgód – te zależą od poprzedniego stanu, patrz consentTimestamp). */
 export type ClientInput = {
@@ -39,6 +44,7 @@ export const EMPTY_CLIENT_FORM: ClientFormValues = {
   note: "",
   rodo_consent: false,
   notifications_consent: false,
+  photo_consent_date: "",
 };
 
 const text = (formData: FormData, key: string) => {
@@ -57,6 +63,7 @@ export function readClientForm(formData: FormData): ClientFormValues {
     note: text(formData, "note"),
     rodo_consent: formData.get("rodo_consent") === "on",
     notifications_consent: formData.get("notifications_consent") === "on",
+    photo_consent_date: text(formData, "photo_consent_date").trim(),
   };
 }
 
@@ -85,6 +92,10 @@ export function validateClientForm(
   const note = values.note.trim();
   if (note.length > CLIENT_TEXT_MAX) errors.note = `Najwyżej ${CLIENT_TEXT_MAX} znaków.`;
 
+  if (values.photo_consent_date && !photoConsentDateValid(values.photo_consent_date)) {
+    errors.photo_consent_date = "Podaj datę zgody (nie z przyszłości) albo usuń zgodę.";
+  }
+
   if (Object.keys(errors).length > 0 || !phone || !values.allergy_status) return { errors };
 
   return {
@@ -103,4 +114,25 @@ export function validateClientForm(
 export function consentTimestamp(checked: boolean, previous: string | null, now: string): string | null {
   if (!checked) return null;
   return previous ?? now;
+}
+
+/** Data „RRRR-MM-DD” w Warszawie z chwili (do pola zgody na zdjęcia). */
+export function warsawDate(value: string | Date): string {
+  return toWarsawLocal(value).slice(0, 10);
+}
+
+function photoConsentDateValid(date: string, now: Date = new Date()): boolean {
+  const parsed = fromWarsawLocal(date);
+  return parsed !== null && /^\d{4}-\d{2}-\d{2}$/.test(date) && date <= warsawDate(now) && parsed.getUTCFullYear() >= 2000;
+}
+
+/**
+ * Zgoda na zdjęcia: pusta data = brak zgody (także wycofanie), ta sama data co wcześniej = bez zmian
+ * (zachowuje dokładną chwilę), nowa data = południe tego dnia w Warszawie, a dzisiejsza – bieżąca chwila.
+ */
+export function photoConsentTimestamp(date: string, previous: string | null, now: string): string | null {
+  if (!date) return null;
+  if (previous && warsawDate(previous) === date) return previous;
+  if (date === warsawDate(now)) return now;
+  return fromWarsawLocal(date)?.toISOString() ?? null;
 }

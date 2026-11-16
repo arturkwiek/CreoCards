@@ -8,6 +8,7 @@ import {
   CLIENT_NAME_MAX,
   CLIENT_TEXT_MAX,
   EMPTY_CLIENT_FORM,
+  warsawDate,
   type AllergyStatus,
   type ClientFormValues,
 } from "@/lib/clients/form";
@@ -57,7 +58,14 @@ export function ClientForm({
   }
 
   const optionalOpen = Boolean(
-    initial.email || initial.note || initial.rodo_consent || initial.notifications_consent || errors.email || errors.note,
+    initial.email ||
+      initial.note ||
+      initial.rodo_consent ||
+      initial.notifications_consent ||
+      initial.photo_consent_date ||
+      errors.email ||
+      errors.note ||
+      errors.photo_consent_date,
   );
 
   return (
@@ -159,7 +167,7 @@ export function ClientForm({
       </fieldset>
 
       <details open={optionalOpen} className="rounded-xl border border-foreground/10 p-4">
-        <summary className="cursor-pointer text-sm font-medium">Więcej: e-mail, notatka, zgody</summary>
+        <summary className="cursor-pointer text-sm font-medium">Więcej: e-mail, notatka, zgody (także na zdjęcia)</summary>
         <div className="mt-4 flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <TextField
@@ -211,6 +219,46 @@ export function ClientForm({
             />
             Zgoda na powiadomienia (SMS / e-mail)
           </label>
+          <fieldset className="flex flex-col gap-2" aria-describedby="client-photo-consent-error">
+            <legend className="mb-1.5 text-sm font-medium">Zgoda na zdjęcia (wizerunek)</legend>
+            <input type="hidden" name="photo_consent_date" value={values.photo_consent_date} />
+            {values.photo_consent_date ? (
+              <>
+                <label htmlFor="client-photo-consent" className="text-sm text-foreground/70">
+                  Data zgody
+                </label>
+                <input
+                  id="client-photo-consent"
+                  type="date"
+                  max={warsawDate(new Date())}
+                  value={values.photo_consent_date}
+                  onChange={(e) => set("photo_consent_date", e.target.value)}
+                  className={`${textareaClass} h-12 border-foreground/20 py-0 focus:border-brand focus:ring-brand/30`}
+                />
+                <button
+                  type="button"
+                  onClick={() => set("photo_consent_date", "")}
+                  className={`${buttonStyles.secondary} h-10 text-sm`}
+                >
+                  Wycofaj zgodę
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-foreground/70">
+                  Brak zgody – zdjęcia bez twarzy (np. tył głowy) można robić zawsze.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => set("photo_consent_date", warsawDate(new Date()))}
+                  className={`${buttonStyles.secondary} h-10 text-sm`}
+                >
+                  Zgoda udzielona dziś
+                </button>
+              </>
+            )}
+            <FieldError id="client-photo-consent-error" message={errors.photo_consent_date} />
+          </fieldset>
         </div>
       </details>
 

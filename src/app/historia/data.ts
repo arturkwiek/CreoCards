@@ -30,6 +30,7 @@ export const CLIENT_FIELDS: FieldSpec[] = [
   { key: "note", label: "Notatka" },
   { key: "rodo_consent_at", label: "Zgoda RODO", format: consent },
   { key: "notifications_consent_at", label: "Zgoda na powiadomienia", format: consent },
+  { key: "photo_consent_at", label: "Zgoda na zdjęcia", format: consent },
   { key: "deleted_at", label: "W koszu", format: (v) => (v ? "tak" : "nie") },
 ];
 

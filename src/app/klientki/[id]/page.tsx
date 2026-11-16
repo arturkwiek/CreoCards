@@ -57,6 +57,9 @@ async function ClientDetail({ params }: { params: PageProps<"/klientki/[id]">["p
             {client.notifications_consent_at
               ? `tak (${dateFormat.format(new Date(client.notifications_consent_at))})`
               : "nie"}
+            {" · "}
+            Zdjęcia (wizerunek):{" "}
+            {client.photo_consent_at ? `tak, od ${dateFormat.format(new Date(client.photo_consent_at))}` : "brak zgody"}
           </dd>
         </div>
       </dl>

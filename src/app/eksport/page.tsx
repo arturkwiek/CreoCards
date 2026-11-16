@@ -17,7 +17,7 @@ async function ExportContent() {
         Pobierz wszystko (ZIP z plikami CSV)
       </a>
       <p className="text-sm text-foreground/60">
-        Dane jednej klientki (np. na jej prośbę – RODO) pobierzesz z jej karty: „Eksportuj dane klientki”.
+        Dane jednej klientki (np. na jej prośbę – RODO) pobierzesz z jej karty: „Eksportuj dane” – plik ZIP z arkuszem i jej zdjęciami. Eksport całości zawiera listę zdjęć bez samych plików (pliki są w nocnym backupie).
       </p>
     </>
   );

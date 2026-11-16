@@ -51,6 +51,8 @@ if [ -f "$DIR/data.sql" ]; then
   echo "--- liczby wierszy w chwili kopii"
   column -t -s $'\t' "$DIR/row-counts.tsv" 2>/dev/null || cat "$DIR/row-counts.tsv"
 else
-  echo "Kopia plików Storage: $(find "$DIR" -type f | wc -l) plik(ów)"
+  [ -s "$DIR/files.sha256" ] || fail "w kopii plików brak manifestu files.sha256"
+  (cd "$DIR" && sha256sum --quiet -c files.sha256) || fail "sumy SHA-256 plików Storage się nie zgadzają"
+  echo "Kopia plików Storage: $(wc -l <"$DIR/files.sha256") plik(ów), sumy SHA-256: OK"
 fi
 echo "Odszyfrowano do: $DIR"

@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { FormMessage, SubmitButton } from "@/components/ui";
 import { buttonStyles } from "@/components/styles";
-import { restoreFromTrash, restoreVersion, type RestoreState } from "./actions";
+import { restoreFromTrash, restoreVersion, type RestoreState, type TrashKind } from "./actions";
 
 /** „Przywróć tę wersję” z potwierdzeniem (tylko właścicielka). */
 export function RestoreVersionButton({ auditId, path }: { auditId: number; path: string }) {
@@ -35,7 +35,7 @@ export function RestoreVersionButton({ auditId, path }: { auditId: number; path:
 }
 
 /** „Przywróć” w koszu (tylko właścicielka). */
-export function RestoreFromTrashButton({ kind, id }: { kind: "client" | "visit" | "product"; id: string }) {
+export function RestoreFromTrashButton({ kind, id }: { kind: TrashKind; id: string }) {
   const [state, action] = useActionState<RestoreState, FormData>(restoreFromTrash, {});
   if (state.success) return <FormMessage success={state.success} />;
   return (

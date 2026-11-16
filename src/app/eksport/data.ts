@@ -52,6 +52,7 @@ export async function exportAll(): Promise<Sheet[]> {
     ["linie_produktow", "product_lines"],
     ["uslugi", "services"],
     ["zgloszenia_brakow", "product_requests"],
+    ["zdjecia", "attachments"],
   ] as const;
   const sheets: Sheet[] = [];
   for (const [name, table] of tables) sheets.push(sheet(name, await fetchAll(supabase, table)));
@@ -65,16 +66,27 @@ export async function exportAll(): Promise<Sheet[]> {
 
 const yesNo = (v: unknown) => (v ? `tak (${formatVisitDate(String(v))})` : "nie");
 
-/** Dane jednej klientki (RODO): karta, zgody, wizyty i receptury – w czytelnej postaci. */
-export async function exportClient(clientId: string): Promise<Sheet[] | null> {
+export type ClientExport = {
+  sheets: Sheet[];
+  /** Zdjęcia do dołączenia: ścieżka w Storage → nazwa w archiwum. */
+  photos: { path: string; name: string }[];
+};
+
+/** Dane jednej klientki (RODO): karta, zgody, wizyty, receptury i zdjęcia – w czytelnej postaci. */
+export async function exportClient(clientId: string): Promise<ClientExport | null> {
   const supabase = await createClient();
   const { data: client } = await supabase.from("clients").select("*").eq("id", clientId).maybeSingle();
   if (!client) return null;
 
-  const [{ data: visits }, { data: services }, { data: team }] = await Promise.all([
+  const [{ data: visits }, { data: services }, { data: team }, { data: attachments }] = await Promise.all([
     supabase.from("visits").select("*").eq("client_id", clientId).order("visit_at"),
     supabase.from("services").select("id, name"),
     supabase.from("users").select("id, full_name, login, email"),
+    supabase
+      .from("attachments")
+      .select("id, visit_id, storage_path, mime, shows_face, consent_missing, created_by, created_at, deleted_at")
+      .eq("client_id", clientId)
+      .order("created_at"),
   ]);
   const visitIds = (visits ?? []).map((v) => v.id);
   const { data: recipes } = visitIds.length
@@ -114,6 +126,7 @@ export async function exportClient(clientId: string): Promise<Sheet[] | null> {
     ["Notatka", client.note],
     ["Zgoda RODO", yesNo(client.rodo_consent_at)],
     ["Zgoda na powiadomienia", yesNo(client.notifications_consent_at)],
+    ["Zgoda na zdjęcia (wizerunek)", yesNo(client.photo_consent_at)],
     ["Dodana", formatVisitDate(client.created_at, true)],
     ["Ostatnia zmiana", formatVisitDate(client.updated_at, true)],
     ["Usunięta", client.deleted_at ? formatVisitDate(client.deleted_at, true) : "nie"],
@@ -149,9 +162,29 @@ export async function exportClient(clientId: string): Promise<Sheet[] | null> {
       ]);
     }
   }
-  return [
-    { name: "Klientka", rows: card },
-    { name: "Wizyty", rows: visitRows },
-    { name: "Receptury", rows: recipeRows },
-  ];
+  const photos: ClientExport["photos"] = [];
+  const photoRows: Cell[][] = [["Plik", "Data zdjęcia", "Data wizyty", "Dodała", "Z twarzą", "Dodane bez zgody", "W koszu"]];
+  for (const a of attachments ?? []) {
+    const visit = visitById.get(a.visit_id);
+    const name = `zdjecia/${a.created_at.slice(0, 10)}_${String(photos.length + 1).padStart(3, "0")}.${a.mime === "image/webp" ? "webp" : "jpg"}`;
+    photos.push({ path: a.storage_path, name });
+    photoRows.push([
+      name,
+      formatVisitDate(a.created_at, true),
+      visit ? formatVisitDate(visit.visit_at, true) : "",
+      personName.get(a.created_by) ?? "",
+      a.shows_face ? "tak" : "nie",
+      a.consent_missing ? "tak" : "",
+      a.deleted_at ? "tak" : "",
+    ]);
+  }
+  return {
+    sheets: [
+      { name: "Klientka", rows: card },
+      { name: "Wizyty", rows: visitRows },
+      { name: "Receptury", rows: recipeRows },
+      { name: "Zdjęcia", rows: photoRows },
+    ],
+    photos,
+  };
 }

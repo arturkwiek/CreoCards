@@ -81,6 +81,8 @@ export async function saveVisit(prev: VisitFormState, formData: FormData): Promi
   }
 
   revalidatePath(`/klientki/${clientId}`);
+  // „Zapisz i dodaj zdjęcia” – strona wizyty z sekcją zdjęć na wierzchu.
+  if (formString(formData, "next") === "photos") redirect(`/wizyty/${visitId}?zdjecia=1`);
   redirect(`/klientki/${clientId}`);
 }
 

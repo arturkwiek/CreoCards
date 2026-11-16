@@ -1,4 +1,5 @@
--- Dane testowe dla testu backupu w CI (lokalna baza): konto, salon, klientka, wizyta, bucket i obiekt Storage,
+-- Dane testowe dla testu backupu w CI (lokalna baza): konto, salon, klientka, wizyta, bucket Storage (pliki wysyła
+-- krok CI przez S3, żeby wpisy storage.objects miały prawdziwe pliki),
 -- oraz sesja (tabela wewnętrzna, którą kopia ma pominąć).
 do $$
 declare
@@ -22,5 +23,4 @@ begin
 end $$;
 
 insert into storage.buckets (id, name, public) values ('ci-backup', 'ci-backup', false);
-insert into storage.objects (bucket_id, name, metadata) values ('ci-backup', 'test/plik.txt', '{"size": 4}');
 

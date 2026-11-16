@@ -1,5 +1,3 @@
-// Wygenerowane przez `supabase gen types typescript --remote --schema public` (staging) – nie edytuj ręcznie.
-
 export type Json =
   | string
   | number
@@ -16,6 +14,88 @@ export type Database = {
   }
   public: {
     Tables: {
+      attachments: {
+        Row: {
+          client_id: string
+          consent_missing: boolean
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          height: number
+          id: string
+          kind: Database["public"]["Enums"]["attachment_kind"]
+          mime: string
+          salon_id: string
+          shows_face: boolean
+          size_bytes: number
+          storage_path: string
+          thumb_path: string
+          updated_at: string
+          visit_id: string
+          width: number
+        }
+        Insert: {
+          client_id: string
+          consent_missing?: boolean
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          height: number
+          id?: string
+          kind?: Database["public"]["Enums"]["attachment_kind"]
+          mime: string
+          salon_id?: string
+          shows_face?: boolean
+          size_bytes: number
+          storage_path: string
+          thumb_path: string
+          updated_at?: string
+          visit_id: string
+          width: number
+        }
+        Update: {
+          client_id?: string
+          consent_missing?: boolean
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          height?: number
+          id?: string
+          kind?: Database["public"]["Enums"]["attachment_kind"]
+          mime?: string
+          salon_id?: string
+          shows_face?: boolean
+          size_bytes?: number
+          storage_path?: string
+          thumb_path?: string
+          updated_at?: string
+          visit_id?: string
+          width?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attachments_client_id_salon_id_fkey"
+            columns: ["client_id", "salon_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id", "salon_id"]
+          },
+          {
+            foreignKeyName: "attachments_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attachments_visit_id_salon_id_fkey"
+            columns: ["visit_id", "salon_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id", "salon_id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: Database["public"]["Enums"]["audit_action"]
@@ -71,6 +151,7 @@ export type Database = {
           notifications_consent_at: string | null
           phone: string
           phone_digits: string | null
+          photo_consent_at: string | null
           rodo_consent_at: string | null
           salon_id: string
           updated_at: string
@@ -88,6 +169,7 @@ export type Database = {
           notifications_consent_at?: string | null
           phone: string
           phone_digits?: string | null
+          photo_consent_at?: string | null
           rodo_consent_at?: string | null
           salon_id?: string
           updated_at?: string
@@ -105,6 +187,7 @@ export type Database = {
           notifications_consent_at?: string | null
           phone?: string
           phone_digits?: string | null
+          photo_consent_at?: string | null
           rodo_consent_at?: string | null
           salon_id?: string
           updated_at?: string
@@ -739,6 +822,8 @@ export type Database = {
       can_edit_mix: { Args: { p_mix_id: string }; Returns: boolean }
       can_edit_recipe: { Args: { p_recipe_id: string }; Returns: boolean }
       can_edit_visit: { Args: { p_visit_id: string }; Returns: boolean }
+      can_read_photo: { Args: { p_name: string }; Returns: boolean }
+      can_upload_photo: { Args: { p_name: string }; Returns: boolean }
       current_salon_id: { Args: never; Returns: string }
       import_products: { Args: { items: Json }; Returns: Json }
       import_services: { Args: { items: Json }; Returns: Json }
@@ -771,6 +856,7 @@ export type Database = {
     }
     Enums: {
       allergy_status: "none" | "has"
+      attachment_kind: "photo"
       audit_action:
         | "update"
         | "delete"
@@ -909,6 +995,7 @@ export const Constants = {
   public: {
     Enums: {
       allergy_status: ["none", "has"],
+      attachment_kind: ["photo"],
       audit_action: [
         "update",
         "delete",

@@ -17,12 +17,18 @@ for f in roles.sql schema.sql data.sql row-counts.tsv; do
 done
 
 LOG="$R/restore.log"
-echo "Przywracanie role + schemat + dane (jedna transakcja)…"
+# Polityki Storage (od Etapu 5) – po danych, w tej samej transakcji; starsze kopie nie mają tego pliku.
+EXTRA=()
+if [ -f "$R/storage-policies.sql" ]; then
+  EXTRA=(--command 'SET session_replication_role = DEFAULT' --file "$R/storage-policies.sql")
+fi
+echo "Przywracanie role + schemat + dane + polityki Storage (jedna transakcja)…"
 if ! psql "$TARGET_DB_URL" -X --single-transaction --variable ON_ERROR_STOP=1 \
   --file "$R/roles.sql" \
   --file "$R/schema.sql" \
   --command 'SET session_replication_role = replica' \
-  --file "$R/data.sql" >"$LOG" 2>&1; then
+  --file "$R/data.sql" \
+  "${EXTRA[@]}" >"$LOG" 2>&1; then
   grep -E 'ERROR|FATAL' "$LOG" | head -5 >&2
   fail "przywracanie przerwane – transakcja wycofana, baza docelowa bez zmian (log: $LOG)"
 fi
