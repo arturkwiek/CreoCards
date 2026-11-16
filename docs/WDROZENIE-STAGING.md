@@ -138,7 +138,7 @@ Skrypt zakłada salon (lub używa istniejącego) i zaproszenie właścicielki. P
 ## Backup poza Supabase (Etap 4a)
 
 Workflow `.github/workflows/backup.yml` co noc (02:15 / 03:15 czasu polskiego) i na żądanie (Actions → Backup → Run workflow):
-zrzut bazy (role, schemat, dane z kontami `auth`) → szyfrowanie **age** → Backblaze B2 (EU Central). Pliki Storage – osobny krok (pomijany bez bucketów).
+zrzut bazy (role, schemat, dane z kontami `auth`) → szyfrowanie **age** → Backblaze B2 (EU Central). Pliki Storage (od Etapu 5 bucket `photos`) – osobny krok i osobny plik `staging/storage/` z manifestem sum SHA-256; backup jest czerwony, gdy brakuje sekretów S3 albo pobrano mniej plików niż jest w `storage.objects`.
 Przywracanie: `docs/PRZYWRACANIE.md`.
 
 | Nazwa | Rodzaj (GitHub → Settings → Secrets and variables → Actions) | Wartość |
@@ -148,7 +148,7 @@ Przywracanie: `docs/PRZYWRACANIE.md`.
 | `B2_BUCKET` | variable | `creocards-backup-staging` (Object Lock: Governance 30 dni; Lifecycle: hide 30 dni, delete po 1 dniu) |
 | `B2_ENDPOINT` | variable | np. `s3.eu-central-003.backblazeb2.com` |
 | `AGE_RECIPIENT` | variable | klucz **publiczny** age (`age1…`); prywatny tylko u właściciela projektu |
-| `STAGING_STORAGE_S3_ENDPOINT`, `STAGING_STORAGE_S3_KEY_ID`, `STAGING_STORAGE_S3_SECRET` | secret | od Etapu 5: Supabase → Storage → S3 Connection |
+| `STAGING_STORAGE_S3_ENDPOINT`, `STAGING_STORAGE_S3_KEY_ID`, `STAGING_STORAGE_S3_SECRET` | secret | od Etapu 5: Supabase → Storage → **S3 Connection** – Endpoint (`https://pjbrssmrjzyrnbmjbamp.storage.supabase.co/storage/v1/s3`) oraz **New access key** (Access key ID i Secret). Region projektu: `eu-west-3` (domyślny w skryptach) |
 
 Sekrety ustawiaj zawsze z nazwą repozytorium: `gh secret set NAZWA --repo arturkwiek/CreoCards` (wartość wpisujesz, nie jest widoczna).
-CI (`db-test`) przy każdym PR sprawdza skrypty backupu na lokalnej bazie z kluczem testowym (zrzut → szyfrowanie → odszyfrowanie → weryfikacja).
+CI (`db-test`) przy każdym PR sprawdza skrypty backupu na lokalnej bazie z kluczem testowym: zrzut bazy i plików Storage (S3 lokalnego Storage) → szyfrowanie → odszyfrowanie z sumami → przywrócenie na czystej bazie jako `postgres` bez superusera (z politykami Storage) → wysłanie plików i porównanie treści.

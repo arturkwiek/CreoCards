@@ -9,21 +9,31 @@ import { mixSummary } from "@/lib/visits/recipe";
 import { formatVisitDate } from "@/lib/visits/time";
 import { AllergyNotice } from "@/app/klientki/allergy-notice";
 import { getClient } from "@/app/klientki/data";
+import { getVisitPhotos } from "@/app/zdjecia/data";
+import { PhotoSection } from "@/app/zdjecia/photo-section";
 import { getProductLabels, getRecipes, getServiceNames, getTeamNames, getVisit } from "../data";
 import { DeleteVisitButton } from "./delete-visit-button";
 
 export const metadata: Metadata = { title: "Wizyta – CreoCards" };
 
-async function VisitContent({ params }: { params: PageProps<"/wizyty/[id]">["params"] }) {
+async function VisitContent({
+  params,
+  searchParams,
+}: {
+  params: PageProps<"/wizyty/[id]">["params"];
+  searchParams: PageProps<"/wizyty/[id]">["searchParams"];
+}) {
   const { id } = await params;
+  const justSaved = (await searchParams).zdjecia === "1";
   const user = await requireUser();
   const visit = await getVisit(id);
   if (!visit) notFound();
-  const [client, recipes, services, names] = await Promise.all([
+  const [client, recipes, services, names, photos] = await Promise.all([
     getClient(visit.client_id),
     getRecipes([visit.id]),
     getServiceNames(),
     getTeamNames(),
+    getVisitPhotos([visit.id]),
   ]);
   if (!client) notFound();
   const recipe = recipes.get(visit.id);
@@ -61,6 +71,14 @@ async function VisitContent({ params }: { params: PageProps<"/wizyty/[id]">["par
         <p className="text-sm text-foreground/60">Wizyta bez receptury.</p>
       )}
 
+      <PhotoSection
+        visitId={visit.id}
+        photos={photos.get(visit.id) ?? []}
+        canAdd={canEdit}
+        photoConsentAt={client.photo_consent_at}
+        justSaved={justSaved}
+      />
+
       {canEdit && (
         <Link href={`/wizyty/${visit.id}/edytuj`} className={buttonStyles.primary}>
           Edytuj wizytę
@@ -78,11 +96,11 @@ async function VisitContent({ params }: { params: PageProps<"/wizyty/[id]">["par
   );
 }
 
-export default function VisitPage({ params }: PageProps<"/wizyty/[id]">) {
+export default function VisitPage({ params, searchParams }: PageProps<"/wizyty/[id]">) {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-8">
       <Suspense fallback={<p className="text-foreground/60">Ładowanie…</p>}>
-        <VisitContent params={params} />
+        <VisitContent params={params} searchParams={searchParams} />
       </Suspense>
     </main>
   );

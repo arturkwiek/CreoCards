@@ -14,7 +14,13 @@ Zasada: niczego nie trzeba przepisywać na zapas. Aplikacja uczy się salonu prz
 ## Wizyta w 3 ruchach
 1. Klientka – wpisz kilka liter imienia lub cyfr telefonu, albo „+ Nowa”.
 2. Receptura – „Powtórz ostatnią” albo wybierz farby z listy.
-3. Zdjęcie gotowej fryzury. Brak czasu? Nagraj notatkę głosową – wizyta zapisze się jako szkic.
+3. Zdjęcie gotowej fryzury – „Zapisz i dodaj zdjęcia”, potem „Zrób zdjęcie”. Brak czasu? Nagraj notatkę głosową – wizyta zapisze się jako szkic.
+
+## Zdjęcia i zgoda klientki
+- Telefon sam zmniejsza zdjęcie i usuwa z niego lokalizację – wysyłka trwa chwilę nawet na słabym Wi-Fi.
+- Klientka bez zgody na zdjęcia? Aplikacja zapyta: **„Bez twarzy (np. tył głowy)”** – zawsze w porządku. **„Z twarzą”** – tylko gdy klientka się zgadza; zgodę wpisz w jej danych („Więcej” → „Zgoda udzielona dziś”).
+- Właścicielka widzi listę **„Zdjęcia bez zgody”** na ekranie głównym: dopisuje zgodę albo przenosi zdjęcie do kosza.
+- Złe zdjęcie? Otwórz je i „Usuń do kosza” – właścicielka może je przywrócić.
 
 Wieczorem aplikacja przypomni o szkicach do uzupełnienia.
 

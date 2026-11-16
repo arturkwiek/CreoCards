@@ -56,6 +56,9 @@ EXTRA="$(grep -oE '^COPY "[a-z_]+"\."[a-z_]+"' "$DIR/data.sql" | sed -E 's/^COPY
   | grep -v '^public\.' | grep -vxF -f <(tr , '\n' <<<"$ALLOW") || true)"
 [ -z "$EXTRA" ] || fail "w danych tabele spoza listy dozwolonych: $(paste -sd' ' <<<"$EXTRA")"
 
+# Polityki Storage (zrzut schematu ich nie obejmuje) – odtwarzane przez restore-db.sh.
+psql "$DB_URL" -X -q -At -v ON_ERROR_STOP=1 -f "$HERE/storage-policies.sql" >"$DIR/storage-policies.sql"
+
 # Liczby wierszy – do porównania po przywróceniu (bez danych osobowych).
 psql "$DB_URL" -X -q -At -F $'\t' -v ON_ERROR_STOP=1 -f "$HERE/row-counts.sql" >"$DIR/row-counts.tsv"
 

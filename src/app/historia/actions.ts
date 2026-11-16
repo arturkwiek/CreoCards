@@ -35,12 +35,13 @@ export async function restoreVersion(_prev: RestoreState, formData: FormData): P
   return { success: "Przywrócono wybraną wersję. Poprzedni stan został zapisany w historii." };
 }
 
-export type TrashKind = "client" | "visit" | "product";
+export type TrashKind = "client" | "visit" | "product" | "photo";
 
-const TABLES: Record<TrashKind, "clients" | "visits" | "products"> = {
+const TABLES: Record<TrashKind, "clients" | "visits" | "products" | "attachments"> = {
   client: "clients",
   visit: "visits",
   product: "products",
+  photo: "attachments",
 };
 
 /** Przywrócenie z kosza (deleted_at = null) – tylko właścicielka; triggery i RLS pilnują tego w bazie. */
@@ -64,5 +65,6 @@ export async function restoreFromTrash(_prev: RestoreState, formData: FormData):
 
   revalidatePath("/kosz");
   revalidatePath(kind === "product" ? "/katalog" : "/klientki");
+  if (kind === "photo") revalidatePath("/zdjecia/bez-zgody");
   return { success: "Przywrócono." };
 }

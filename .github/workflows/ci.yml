@@ -37,13 +37,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Lokalny Supabase – baza + Auth + Storage (schematy auth i storage jak na projekcie), migracje z supabase/migrations
-        run: npx supabase start -x realtime,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+      - name: Lokalny Supabase – baza + Auth + Storage z API S3 (przez kong), migracje z supabase/migrations
+        run: npx supabase start -x realtime,imgproxy,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - name: Testy RLS (pgTAP)
         run: npx supabase test db
       - name: Test skryptów backupu (lokalna baza, klucz testowy, bez wysyłki)
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq age postgresql-client >/dev/null
+          sudo apt-get update -qq && sudo apt-get install -y -qq age postgresql-client rclone >/dev/null
           psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -X -q -v ON_ERROR_STOP=1 -f scripts/backup/ci-seed.sql
           age-keygen -o "$RUNNER_TEMP/test.agekey" 2>/dev/null
           mkdir -p "$RUNNER_TEMP/backup-out"
@@ -55,6 +55,31 @@ jobs:
           for f in "$RUNNER_TEMP"/backup-out/*; do mv "$f" "$RUNNER_TEMP/backup-out/ci_db_$(basename "$f")"; done
           bash scripts/backup/decrypt-backup.sh "$(ls "$RUNNER_TEMP"/backup-out/*.tar.gz.age)" "$RUNNER_TEMP/test.agekey" "$RUNNER_TEMP/restore" | tee "$RUNNER_TEMP/decrypt.log"
           grep -q "Suma SHA-256 pliku zaszyfrowanego: OK" "$RUNNER_TEMP/decrypt.log"
+      - name: Test kopii plików Storage (S3 lokalnego Storage, bez wysyłki)
+        run: |
+          npx supabase status -o env >"$RUNNER_TEMP/status.env"
+          echo "Zmienne supabase status: $(cut -d= -f1 "$RUNNER_TEMP/status.env" | paste -sd' ')"
+          eval "$(grep -E '^(S3_PROTOCOL_ACCESS_KEY_ID|S3_PROTOCOL_ACCESS_KEY_SECRET|S3_PROTOCOL_REGION|STORAGE_S3_URL)=' "$RUNNER_TEMP/status.env")"
+          {
+            echo "STORAGE_S3_ENDPOINT=$STORAGE_S3_URL"
+            echo "STORAGE_S3_KEY_ID=$S3_PROTOCOL_ACCESS_KEY_ID"
+            echo "STORAGE_S3_SECRET=$S3_PROTOCOL_ACCESS_KEY_SECRET"
+            echo "STORAGE_S3_REGION=$S3_PROTOCOL_REGION"
+          } >>"$GITHUB_ENV"
+          export RCLONE_CONFIG_SUPA_TYPE=s3 RCLONE_CONFIG_SUPA_PROVIDER=Other RCLONE_CONFIG_SUPA_FORCE_PATH_STYLE=true             RCLONE_CONFIG_SUPA_ENDPOINT="$STORAGE_S3_URL" RCLONE_CONFIG_SUPA_ACCESS_KEY_ID="$S3_PROTOCOL_ACCESS_KEY_ID"             RCLONE_CONFIG_SUPA_SECRET_ACCESS_KEY="$S3_PROTOCOL_ACCESS_KEY_SECRET" RCLONE_CONFIG_SUPA_REGION="$S3_PROTOCOL_REGION"
+          # Dwa pliki testowe w buckecie photos (z migracji) – jak zdjęcie i miniatura.
+          D="$RUNNER_TEMP/photos-src/ci/wizyta"; mkdir -p "$D"
+          head -c 20000 /dev/urandom >"$D/00000000-0000-4000-8000-0000000000f1.webp"
+          head -c 3000 /dev/urandom >"$D/00000000-0000-4000-8000-0000000000f1-m.webp"
+          rclone copy -q --s3-no-check-bucket "$RUNNER_TEMP/photos-src" supa:photos
+          mkdir -p "$RUNNER_TEMP/storage-out"
+          DB_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"           AGE_RECIPIENT="$(age-keygen -y "$RUNNER_TEMP/test.agekey")"           STORAGE_S3_ENDPOINT="$STORAGE_S3_URL" STORAGE_S3_KEY_ID="$S3_PROTOCOL_ACCESS_KEY_ID"           STORAGE_S3_SECRET="$S3_PROTOCOL_ACCESS_KEY_SECRET" STORAGE_S3_REGION="$S3_PROTOCOL_REGION"           BACKUP_PREFIX=ci BACKUP_SKIP_UPLOAD=1 BACKUP_OUT_DIR="$RUNNER_TEMP/storage-out"             bash scripts/backup/storage-backup.sh
+          bash scripts/backup/decrypt-backup.sh "$(ls "$RUNNER_TEMP"/storage-out/*.tar.gz.age)" "$RUNNER_TEMP/test.agekey" "$RUNNER_TEMP/restore" | tee "$RUNNER_TEMP/decrypt-storage.log"
+          grep -q "Kopia plików Storage: 2 plik(ów), sumy SHA-256: OK" "$RUNNER_TEMP/decrypt-storage.log"
+          # Kopia bazy (zrobiona wcześniej) ma te same obiekty – zrób ją ponownie, żeby test przywracania obejmował pliki.
+          rm -rf "$RUNNER_TEMP/backup-out"/* "$RUNNER_TEMP"/restore/creocards-ci-db-*
+          DB_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"           AGE_RECIPIENT="$(age-keygen -y "$RUNNER_TEMP/test.agekey")"           BACKUP_PREFIX=ci BACKUP_SKIP_UPLOAD=1 BACKUP_OUT_DIR="$RUNNER_TEMP/backup-out"             bash scripts/backup/backup.sh
+          bash scripts/backup/decrypt-backup.sh "$(ls "$RUNNER_TEMP"/backup-out/*.tar.gz.age)" "$RUNNER_TEMP/test.agekey" "$RUNNER_TEMP/restore" >/dev/null
       - name: Test przywracania (czysta baza Supabase bez migracji, rola postgres bez superusera)
         run: |
           # Czysta baza jak nowy projekt: reset z pustym katalogiem migracji (Auth i Storage odtwarzają swoje schematy).
@@ -66,3 +91,6 @@ jobs:
           test "$(psql "$TARGET_DB_URL" -X -At -c "select to_regclass('public.clients') is null and to_regclass('storage.objects') is not null")" = t || { echo "BŁĄD: baza docelowa nie jest czysta albo brak schematu storage"; exit 1; }
           echo "Prawo INSERT roli postgres do storage.buckets_vectors (na projekcie Supabase: f): $(psql "$TARGET_DB_URL" -X -At -c "select coalesce((select has_table_privilege('storage.buckets_vectors', 'INSERT') where to_regclass('storage.buckets_vectors') is not null)::text, 'brak tabeli')")"
           TARGET_DB_URL="$TARGET_DB_URL" bash scripts/backup/restore-db.sh "$(ls -d "$RUNNER_TEMP"/restore/creocards-ci-db-*)"
+          test "$(psql "$TARGET_DB_URL" -X -At -c "select count(*) from pg_policies where schemaname = 'storage' and policyname in ('photos_insert', 'photos_select')")" = 2 || { echo "BŁĄD: po przywróceniu brak polityk Storage dla zdjęć"; exit 1; }
+          # Pliki Storage po przywróceniu bazy (wpisy storage.objects już są – jak na nowym projekcie).
+          bash scripts/backup/restore-storage.sh "$(ls -d "$RUNNER_TEMP"/restore/creocards-ci-storage-*)"

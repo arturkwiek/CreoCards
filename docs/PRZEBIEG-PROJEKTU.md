@@ -178,6 +178,13 @@ Zasady bezpieczeństwa danych (pełna lista w `AGENTS.md`): migracje tylko dodaj
   | Plik z panelu B2 ma nazwę `staging_db_creocards-…` | panel dokleja ścieżkę jako przedrostek | `decrypt-backup.sh` pomija przedrostek (test w CI) |
 - Kolejna próba: raz na kwartał i przed pilotażem na produkcji (Supabase Pro).
 
+### Etap 5 – Zdjęcia (PR #14)
+- Zdjęcia wizyt w prywatnym buckecie `photos` (`<salon>/<wizyta>/<id>`), polityki Storage izolują salony; podpisane linki – miniatury 30 min, pełne zdjęcie tworzone przy otwarciu (5 min).
+- Telefon zmniejsza zdjęcie do 1600 px (WebP 0,8 albo JPEG 0,82) i robi miniaturę 400 px; ponowny zapis usuwa EXIF/GPS, a serwer dodatkowo odrzuca i usuwa plik z metadanymi.
+- Zgoda na wizerunek (`clients.photo_consent_at`): ostrzeżenie „Bez twarzy / Z twarzą”, lista właścicielki „Zdjęcia bez zgody” z licznikiem na ekranie głównym.
+- Kosz → Zdjęcia; eksport RODO klientki jako ZIP z jej zdjęciami.
+- Backup: kopia plików z manifestem sum, polityki Storage w kopii bazy (zrzut schematu CLI ich nie obejmuje – bez tego przywrócony projekt nie dawałby dostępu do zdjęć), `restore-storage.sh`; CI testuje kopię i przywrócenie plików.
+
 ---
 
 ## 5. Gdzie jesteśmy teraz

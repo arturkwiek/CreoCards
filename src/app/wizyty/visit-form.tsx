@@ -507,6 +507,11 @@ export function VisitForm({
 
       <FormMessage error={state.error} />
       <SubmitButton pendingText="Zapisywanie…">{visitId ? "Zapisz zmiany" : "Zapisz wizytę"}</SubmitButton>
+      {!visitId && (
+        <SubmitButton name="next" value="photos" variant="secondary" pendingText="Zapisywanie…">
+          Zapisz i dodaj zdjęcia
+        </SubmitButton>
+      )}
       <Link href={cancelHref} className={buttonStyles.secondary}>
         Anuluj
       </Link>

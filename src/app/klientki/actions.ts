@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireOwner, requireUser } from "@/lib/auth/session";
 import {
   consentTimestamp,
+  photoConsentTimestamp,
   readClientForm,
   validateClientForm,
   type ClientFormErrors,
@@ -45,6 +46,7 @@ export async function saveClient(_prev: ClientFormState, formData: FormData): Pr
         ...result.data,
         rodo_consent_at: consentTimestamp(values.rodo_consent, null, now),
         notifications_consent_at: consentTimestamp(values.notifications_consent, null, now),
+        photo_consent_at: photoConsentTimestamp(values.photo_consent_date, null, now),
       })
       .select("id")
       .single();
@@ -53,7 +55,7 @@ export async function saveClient(_prev: ClientFormState, formData: FormData): Pr
   } else {
     const { data: existing } = await supabase
       .from("clients")
-      .select("rodo_consent_at, notifications_consent_at")
+      .select("rodo_consent_at, notifications_consent_at, photo_consent_at")
       .eq("id", id)
       .is("deleted_at", null)
       .maybeSingle();
@@ -69,6 +71,7 @@ export async function saveClient(_prev: ClientFormState, formData: FormData): Pr
           existing.notifications_consent_at,
           now,
         ),
+        photo_consent_at: photoConsentTimestamp(values.photo_consent_date, existing.photo_consent_at, now),
       })
       .eq("id", id)
       .is("deleted_at", null);

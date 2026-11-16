@@ -10,6 +10,7 @@ export type CurrentUser = {
   email: string;
   fullName: string;
   role: UserRole;
+  salonId: string;
   salonName: string;
 };
 
@@ -27,7 +28,7 @@ export const getSession = cache(async (): Promise<SessionState> => {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("id, email, full_name, role, salons(name)")
+    .select("id, email, full_name, role, salon_id, salons(name)")
     .eq("id", claims.sub)
     .maybeSingle();
 
@@ -42,6 +43,7 @@ export const getSession = cache(async (): Promise<SessionState> => {
       email: profile.email,
       fullName: profile.full_name,
       role: profile.role,
+      salonId: profile.salon_id,
       salonName: profile.salons?.name ?? "",
     },
   };

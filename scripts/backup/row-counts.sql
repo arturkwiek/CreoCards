@@ -13,6 +13,8 @@ union all select 'public.product_lines', count(*) from public.product_lines
 union all select 'public.services', count(*) from public.services
 union all select 'public.product_requests', count(*) from public.product_requests
 union all select 'public.audit_log', count(*) from public.audit_log
+union all select 'public.attachments', (xpath('/row/c/text()', query_to_xml('select count(*) as c from public.attachments', false, true, '')))[1]::text::bigint
+  where to_regclass('public.attachments') is not null
 union all select 'storage.objects', (xpath('/row/c/text()', query_to_xml('select count(*) as c from storage.objects', false, true, '')))[1]::text::bigint
   where to_regclass('storage.objects') is not null
 order by 1;

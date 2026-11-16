@@ -26,7 +26,7 @@ Pola obowiązkowe:
 Pola opcjonalne:
 
 - E-mail
-- Zgody (RODO, powiadomienia)
+- Zgody (RODO, powiadomienia, **zdjęcia z wizerunkiem** – data zgody; można ją wycofać)
 - Jedna swobodna notatka (profil włosa, preferencje)
 
 Zasada: wszystko poza polami obowiązkowymi uzupełnia się przy okazji, nigdy nie blokuje zapisu.
@@ -38,9 +38,19 @@ Zasada: wszystko poza polami obowiązkowymi uzupełnia się przy okazji, nigdy n
 - Usługa wybierana z listy (lista usług z zakładki „Usługi” arkusza: usługa, cena od–do, czas, „Z farbą?”; import CSV). Usługa „z farbą” od razu otwiera recepturę.
 - Cena wizyty – opcjonalna, z podpowiedzią „od–do” z usługi.
 - Receptura (opcjonalna, patrz niżej).
-- Zdjęcia gotowej fryzury (jedno lub więcej).
+- Zdjęcia gotowej fryzury (jedno lub więcej) – patrz „Zdjęcia” niżej.
 - Notatka głosowa z automatyczną transkrypcją na tekst.
 - Status: **Szkic** lub **Zakończona**.
+
+## Zdjęcia
+
+- Dodawanie na stronie wizyty („Zrób zdjęcie” – aparat, „Z galerii”) oraz przyciskiem „Zapisz i dodaj zdjęcia” w nowej wizycie. Zdjęcia dodaje osoba, która może edytować wizytę (autorka lub właścicielka).
+- **Na telefonie, przed wysłaniem**: obrót wg aparatu, zmniejszenie do 1600 px (dłuższy bok), WebP 0,8 (JPEG 0,82, gdy przeglądarka nie zapisuje WebP) i miniatura 400 px. Ponowny zapis usuwa wszystkie metadane (EXIF, w tym **GPS**); aplikacja i serwer dodatkowo odrzucają plik z EXIF/XMP.
+- **Zgoda na wizerunek**: bez zgody klientki przy dodawaniu pojawia się ostrzeżenie z wyborem „Bez twarzy (np. tył głowy)” – dozwolone zawsze – albo „Z twarzą” → „Dodaj mimo braku zgody”. Takie zdjęcia trafiają na listę właścicielki **„Zdjęcia bez zgody”** (przyciski „Dopisz zgodę” i „Usuń do kosza”), a na ekranie głównym widać licznik, gdy lista nie jest pusta.
+- **Prywatny bucket** `photos`, ścieżka `<salon>/<wizyta>/<id>`; polityki Storage izolują salony. Miniatury przez podpisane linki ważne 30 min, pełne zdjęcie – link tworzony w chwili otwarcia, ważny 5 min. Plików nie da się nadpisać ani usunąć z konta użytkownika.
+- **Usuwanie miękkie**: „Usuń do kosza” – osoba, która może edytować wizytę; przywraca właścicielka (Kosz → Zdjęcia).
+- Oś czasu klientki: do 3 miniatur na wizytę i licznik „+N”.
+- Eksport danych klientki (RODO): ZIP z arkuszem i wszystkimi jej zdjęciami. Nocny backup obejmuje pliki (osobna, zaszyfrowana kopia).
 
 ## Receptura koloryzacji
 
