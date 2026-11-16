@@ -57,7 +57,9 @@ jobs:
           grep -q "Suma SHA-256 pliku zaszyfrowanego: OK" "$RUNNER_TEMP/decrypt.log"
       - name: Test kopii plików Storage (S3 lokalnego Storage, bez wysyłki)
         run: |
-          eval "$(npx supabase status -o env | grep -E '^(S3_PROTOCOL_ACCESS_KEY_ID|S3_PROTOCOL_ACCESS_KEY_SECRET|S3_PROTOCOL_REGION|STORAGE_S3_URL)=')"
+          npx supabase status -o env >"$RUNNER_TEMP/status.env"
+          echo "Zmienne supabase status: $(cut -d= -f1 "$RUNNER_TEMP/status.env" | paste -sd' ')"
+          eval "$(grep -E '^(S3_PROTOCOL_ACCESS_KEY_ID|S3_PROTOCOL_ACCESS_KEY_SECRET|S3_PROTOCOL_REGION|STORAGE_S3_URL)=' "$RUNNER_TEMP/status.env")"
           {
             echo "STORAGE_S3_ENDPOINT=$STORAGE_S3_URL"
             echo "STORAGE_S3_KEY_ID=$S3_PROTOCOL_ACCESS_KEY_ID"
