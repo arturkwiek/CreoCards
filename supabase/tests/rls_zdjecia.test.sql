@@ -7,6 +7,15 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(34);
 
+-- Liczba wierszy zmienionych przez polecenie (z RLS osoby wywołującej).
+create function pg_temp.affected(q text) returns int language plpgsql as $$
+declare n int;
+begin
+  execute q;
+  get diagnostics n = row_count;
+  return n;
+end $$;
+
 -- ---------------------------------------------------------------------------
 -- Dane testowe
 -- ---------------------------------------------------------------------------
@@ -112,10 +121,8 @@ select throws_ok($$
 $$, '42501', null, 'niepoprawna nazwa pliku odrzucona');
 
 select is((select count(*)::int from storage.objects where bucket_id = 'photos'), 1, 'uczennica widzi plik zapisanego zdjęcia');
-select is((with u as (update storage.objects set name = name || '.x' where bucket_id = 'photos' returning 1) select count(*)::int from u),
-  0, 'pliku nie da się zmienić');
-select is((with d as (delete from storage.objects where bucket_id = 'photos' returning 1) select count(*)::int from d),
-  0, 'pliku nie da się usunąć');
+select is(pg_temp.affected($$update storage.objects set name = name || '.x' where bucket_id = 'photos'$$), 0, 'pliku nie da się zmienić');
+select is(pg_temp.affected($$delete from storage.objects where bucket_id = 'photos'$$), 0, 'pliku nie da się usunąć');
 select throws_ok($$delete from public.attachments$$, '42501', null, 'brak twardego usuwania zdjęć');
 
 -- Do kosza i (bez) przywracania
@@ -133,8 +140,8 @@ set local request.jwt.claims = '{"sub":"33333333-3333-3333-3333-333333333333","r
 
 select is((select count(*)::int from public.attachments where visit_id = 'aa000000-0000-0000-0000-0000000000a1'), 2,
   'zespół widzi zdjęcia wizyt salonu');
-select is((with u as (update public.attachments set deleted_at = now() where id = 'f1000000-0000-4000-8000-000000000002' returning 1)
-  select count(*)::int from u), 0, 'druga uczennica nie przenosi cudzego zdjęcia do kosza');
+select is(pg_temp.affected($$update public.attachments set deleted_at = now() where id = 'f1000000-0000-4000-8000-000000000002'$$), 0,
+  'druga uczennica nie przenosi cudzego zdjęcia do kosza');
 
 -- ---------------------------------------------------------------------------
 -- Właścicielka A: kosz, przywracanie, zgoda
