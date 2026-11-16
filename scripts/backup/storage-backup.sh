@@ -58,9 +58,7 @@ tar -C "$WORK" -czf "$WORK/$NAME.tar.gz" "$NAME"
 PLAIN_SHA="$(sha256sum "$WORK/$NAME.tar.gz" | cut -d' ' -f1)"
 age -r "$AGE_RECIPIENT" -o "$WORK/$NAME.tar.gz.age" "$WORK/$NAME.tar.gz"
 ENC_SHA="$(sha256sum "$WORK/$NAME.tar.gz.age" | cut -d' ' -f1)"
-printf '%s  %s
-%s  %s
-' "$ENC_SHA" "$NAME.tar.gz.age" "$PLAIN_SHA" "$NAME.tar.gz" >"$WORK/$NAME.sha256"
+printf '%s  %s\n%s  %s\n' "$ENC_SHA" "$NAME.tar.gz.age" "$PLAIN_SHA" "$NAME.tar.gz" >"$WORK/$NAME.sha256"
 SIZE="$(stat -c %s "$WORK/$NAME.tar.gz.age")"
 echo "Storage: ${#BUCKETS[@]} bucket(y), $COUNT plik(ów), zaszyfrowano $NAME.tar.gz.age ($SIZE B)"
 
