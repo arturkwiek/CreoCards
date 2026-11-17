@@ -7,7 +7,8 @@ import { LoginForm } from "./login-form";
 export const metadata: Metadata = { title: "Logowanie – CreoCards" };
 
 async function LinkError({ searchParams }: { searchParams: PageProps<"/logowanie">["searchParams"] }) {
-  const { blad } = await searchParams;
+  const { blad, info } = await searchParams;
+  if (info === "inne-konto") return <FormMessage success="Wylogowano. Poproś właścicielkę o właściwy link." />;
   if (blad !== "link") return null;
   return <FormMessage error="Link jest nieważny lub wygasł. Poproś o nowy." />;
 }

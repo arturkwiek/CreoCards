@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { AuthCard, FormMessage, SubmitButton } from "@/components/ui";
 import { parseConfirmParams } from "@/lib/auth/confirm";
 import { LOGIN_PATH } from "@/lib/auth/paths";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { confirmLink } from "./actions";
 
 export const metadata: Metadata = {
@@ -31,8 +32,16 @@ async function ConfirmContent({ searchParams }: { searchParams: PageProps<"/auth
     );
   }
 
+  // Tylko nazwa salonu – przed kliknięciem nie wiadomo, kto otwiera link (bez imienia i loginu). Token nie jest zużywany.
+  const { data: salonName } = await createAdminClient().rpc("link_salon_name", { p_token_hash: params.tokenHash });
+
   return (
     <form action={confirmLink} className="flex flex-col gap-4">
+      {salonName && (
+        <p className="rounded-xl bg-foreground/5 px-4 py-3 text-sm font-medium">
+          Ten link ustawia hasło do konta w salonie {salonName}.
+        </p>
+      )}
       <p className="text-sm text-foreground/70">{INTRO[params.type]}</p>
       <input type="hidden" name="token_hash" value={params.tokenHash} />
       <input type="hidden" name="type" value={params.type} />
