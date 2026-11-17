@@ -11,7 +11,7 @@ import {
   normalizeEmail,
   validatePassword,
 } from "@/lib/validation";
-import { parseIdentifier, unknownLoginEmail } from "./login";
+import { accountIdentity, parseIdentifier, passwordSetMessage, unknownLoginEmail } from "./login";
 import { LOGIN_PATH, SET_PASSWORD_PATH, mustChangePassword } from "./paths";
 import { THROTTLED_MESSAGE, attemptKeys, clientIp, isThrottled, recordAttempt } from "./rate-limit";
 
@@ -105,5 +105,15 @@ export async function setPassword(_prev: FormState, formData: FormData): Promise
     });
     await supabase.auth.refreshSession();
   }
-  redirect("/");
+  // Ekran potwierdzenia z loginem (albo e-mailem), którym konto się loguje.
+  const { data: profile } = await supabase.from("users").select("login, email").eq("id", data.claims.sub).maybeSingle();
+  const identity = profile ? accountIdentity(profile) : null;
+  return { success: identity?.value ? passwordSetMessage(identity) : "Gotowe. Hasło zostało ustawione." };
+}
+
+/** „To nie moje konto” na stronie ustawiania hasła – wylogowanie i prośba o właściwy link. */
+export async function notMyAccount(): Promise<void> {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect(`${LOGIN_PATH}?info=inne-konto`);
 }

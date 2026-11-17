@@ -828,6 +828,7 @@ export type Database = {
       import_products: { Args: { items: Json }; Returns: Json }
       import_services: { Args: { items: Json }; Returns: Json }
       is_owner: { Args: never; Returns: boolean }
+      link_salon_name: { Args: { p_token_hash: string }; Returns: string }
       log_export: {
         Args: { p_row_id?: string; p_scope: string }
         Returns: undefined

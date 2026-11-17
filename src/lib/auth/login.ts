@@ -49,3 +49,18 @@ export function parseIdentifier(value: unknown): LoginIdentifier | null {
 export function unknownLoginEmail(login: string): string {
   return `${login}.00000000@${TECHNICAL_EMAIL_DOMAIN}`;
 }
+
+export type AccountIdentity = { kind: "login" | "email"; value: string };
+
+/** Czym konto się loguje: login, a gdy go nie ma – widoczny e-mail (nigdy adres techniczny). */
+export function accountIdentity(user: { login: string | null; email: string }): AccountIdentity {
+  if (user.login) return { kind: "login", value: user.login };
+  return { kind: "email", value: visibleEmail(user.email) };
+}
+
+/** Potwierdzenie po zapisaniu hasła. */
+export function passwordSetMessage(identity: AccountIdentity): string {
+  return identity.kind === "login"
+    ? `Gotowe. Logujesz się loginem ${identity.value} i nowym hasłem.`
+    : `Gotowe. Logujesz się e-mailem ${identity.value} i nowym hasłem.`;
+}

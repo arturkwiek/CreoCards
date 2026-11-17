@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  accountIdentity,
+  passwordSetMessage,
   isTechnicalEmail,
   isValidLogin,
   normalizeLogin,
@@ -59,5 +61,22 @@ describe("hasło tymczasowe", () => {
     const p = generateTempPassword(() => bytes.shift() ?? 0);
     expect(p).toMatch(/[a-zA-Z]/);
     expect(p).toMatch(/\d/);
+  });
+});
+
+describe("konto na stronie ustawiania hasła", () => {
+  const tech = technicalEmail("ania", "a0000000-0000-0000-0000-00000000000a");
+  it("konto z loginem: login (adres techniczny nigdy nie jest pokazywany)", () => {
+    expect(accountIdentity({ login: "ania", email: tech })).toEqual({ kind: "login", value: "ania" });
+    expect(passwordSetMessage({ kind: "login", value: "ania" })).toBe("Gotowe. Logujesz się loginem ania i nowym hasłem.");
+  });
+  it("konto bez loginu: e-mail", () => {
+    expect(accountIdentity({ login: null, email: "kinga@example.com" })).toEqual({ kind: "email", value: "kinga@example.com" });
+    expect(passwordSetMessage({ kind: "email", value: "kinga@example.com" })).toBe(
+      "Gotowe. Logujesz się e-mailem kinga@example.com i nowym hasłem.",
+    );
+  });
+  it("adres techniczny bez loginu nie jest ujawniany", () => {
+    expect(accountIdentity({ login: null, email: tech }).value).toBe("");
   });
 });
