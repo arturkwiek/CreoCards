@@ -945,7 +945,11 @@ export type Database = {
     }
     Enums: {
       allergy_status: "none" | "has" | "unknown"
-      appointment_status: "umowiona" | "odbyla_sie" | "odwolana" | "nie_przyszla"
+      appointment_status:
+        | "umowiona"
+        | "odbyla_sie"
+        | "odwolana"
+        | "nie_przyszla"
       attachment_kind: "photo"
       audit_action:
         | "update"
@@ -1085,7 +1089,12 @@ export const Constants = {
   public: {
     Enums: {
       allergy_status: ["none", "has", "unknown"],
-      appointment_status: ["umowiona", "odbyla_sie", "odwolana", "nie_przyszla"],
+      appointment_status: [
+        "umowiona",
+        "odbyla_sie",
+        "odwolana",
+        "nie_przyszla",
+      ],
       attachment_kind: ["photo"],
       audit_action: [
         "update",
