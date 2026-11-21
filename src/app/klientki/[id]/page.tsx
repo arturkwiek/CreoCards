@@ -7,6 +7,7 @@ import { requireUser } from "@/lib/auth/session";
 import { formatPhone, telHref } from "@/lib/clients/phone";
 import { AllergyNotice } from "../allergy-notice";
 import { getClient } from "../data";
+import { UpcomingAppointments } from "./upcoming-appointments";
 import { VisitList } from "./visit-list";
 import { DeleteClientButton } from "./delete-client-button";
 
@@ -30,6 +31,14 @@ async function ClientDetail({ params }: { params: PageProps<"/klientki/[id]">["p
       <Link href={`/klientki/${client.id}/wizyta/nowa`} className={buttonStyles.primary}>
         + Nowa wizyta
       </Link>
+
+      <Link href={`/grafik/nowy?klientka=${client.id}`} className={buttonStyles.secondary}>
+        Umów termin
+      </Link>
+
+      <Suspense fallback={null}>
+        <UpcomingAppointments clientId={client.id} />
+      </Suspense>
 
       <a href={telHref(client.phone)} className={buttonStyles.secondary}>
         Zadzwoń: {formatPhone(client.phone)}

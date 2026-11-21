@@ -17,11 +17,12 @@ const TABS = [
   { key: "wizyty", label: "Wizyty" },
   { key: "produkty", label: "Produkty" },
   { key: "zdjecia", label: "Zdjęcia" },
+  { key: "terminy", label: "Terminy" },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
 /** Kto usunął – ostatni wpis „delete” w historii (dla wierszy z audytem). */
-async function deletedBy(table: "clients" | "visits" | "products" | "attachments", ids: string[]): Promise<Map<string, string>> {
+async function deletedBy(table: "clients" | "visits" | "products" | "attachments" | "appointments", ids: string[]): Promise<Map<string, string>> {
   if (ids.length === 0) return new Map();
   const supabase = await createClient();
   const { data } = await supabase
@@ -75,6 +76,23 @@ async function TrashContent({ searchParams }: { searchParams: PageProps<"/kosz">
       detail: formatVisitDate(v.visit_at),
       deletedAt: v.deleted_at!,
       by: by.get(v.id),
+    }));
+  } else if (tab === "terminy") {
+    kind = "appointment";
+    const { data } = await supabase
+      .from("appointments")
+      .select("id, staff_id, service_id, starts_at, deleted_at, clients(full_name)")
+      .not("deleted_at", "is", null)
+      .order("deleted_at", { ascending: false })
+      .limit(200);
+    const rows = data ?? [];
+    const [services, by] = await Promise.all([getServiceNames(), deletedBy("appointments", rows.map((r) => r.id))]);
+    items = rows.map((r) => ({
+      id: r.id,
+      title: `${r.clients?.full_name ?? "Klientka"} – ${(r.service_id && services.get(r.service_id)) || "termin"}`,
+      detail: `${formatVisitDate(r.starts_at, true)} · ${names.get(r.staff_id) ?? ""}`,
+      deletedAt: r.deleted_at!,
+      by: by.get(r.id),
     }));
   } else if (tab === "zdjecia") {
     kind = "photo";
@@ -167,7 +185,7 @@ export default function TrashPage({ searchParams }: PageProps<"/kosz">) {
         </Link>
       </div>
       <p className="text-sm text-foreground/60">
-        Usunięte klientki, wizyty, produkty i zdjęcia – dane zostają w bazie i można je przywrócić. Widoczne tylko dla właścicielki.
+        Usunięte klientki, wizyty, produkty, zdjęcia i terminy – dane zostają w bazie i można je przywrócić. Widoczne tylko dla właścicielki.
       </p>
       <Suspense fallback={<p className="text-foreground/60">Ładowanie…</p>}>
         <TrashContent searchParams={searchParams} />

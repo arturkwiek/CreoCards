@@ -43,6 +43,19 @@ describe("validateClientForm", () => {
     expect(has.data?.allergy_status).toBe("has");
   });
 
+  it("„nieuzupełnione” tylko tam, gdzie dopuszczone (termin w grafiku)", () => {
+    expect(validateClientForm({ ...valid, allergy_status: "unknown" }).errors?.allergy_status).toBeDefined();
+    const unknown = validateClientForm({ ...valid, allergy_status: "unknown", allergies: "PPD" }, { allowUnknown: true });
+    expect(unknown.errors).toBeUndefined();
+    expect(unknown.data).toMatchObject({ allergy_status: "unknown", allergies: "" });
+  });
+
+  it("formularz odczytuje „unknown”, odrzuca nieznane wartości", () => {
+    const fd = new FormData();
+    fd.set("allergy_status", "unknown");
+    expect(readClientForm(fd).allergy_status).toBe("unknown");
+  });
+
   it("opis alergii zapisany tylko przy „Są alergie”", () => {
     expect(validateClientForm({ ...valid, allergy_status: "has", allergies: " PPD " }).data?.allergies).toBe("PPD");
     expect(validateClientForm({ ...valid, allergy_status: "none", allergies: "PPD" }).data?.allergies).toBe("");

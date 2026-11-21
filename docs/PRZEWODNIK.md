@@ -16,6 +16,13 @@ Zasada: niczego nie trzeba przepisywać na zapas. Aplikacja uczy się salonu prz
 2. Receptura – „Powtórz ostatnią” albo wybierz farby z listy.
 3. Zdjęcie gotowej fryzury – „Zapisz i dodaj zdjęcia”, potem „Zrób zdjęcie”. Brak czasu? Nagraj notatkę głosową – wizyta zapisze się jako szkic.
 
+## Grafik
+- **Grafik** na ekranie głównym: Twój dzień godzina po godzinie. Dotknij godziny albo „+ Dodaj termin”: wybierz klientkę (albo „+ Nowa klientka” – wystarczy imię i telefon), godzinę, usługę – zapisz.
+- Gdy termin nachodzi na inny, aplikacja ostrzeże – możesz zapisać mimo to.
+- Klientka przyszła? Otwórz termin → **„Nowa wizyta”** – klientka i usługa są już wybrane.
+- Nowa klientka bez wpisanych alergii: przed farbą zobaczysz „Zapytaj o alergie przed nałożeniem farby” – zaznacz odpowiedź, zanim zapiszesz recepturę.
+- Właścicielka dodaje terminy także innym osobom i widzi „Wszyscy” – kto jest wolny.
+
 ## Receptura jednym zdaniem
 - W wizycie: „Wpisz lub podyktuj recepturę” i napisz tak jak w zeszycie, np. `9.008, -10g, 8.36-10g, 8.000-10g, 8.21-10g/6%`.
 - Wolisz mówić? Dotknij **mikrofonu na klawiaturze** i powiedz: „dziewięć kropka zero zero osiem, dziesięć gram, osiem trzydzieści sześć, dziesięć gram, … sześć procent”.

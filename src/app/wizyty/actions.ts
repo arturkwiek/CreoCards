@@ -3,12 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireOwner, requireUser } from "@/lib/auth/session";
+import { ASK_ALLERGIES, CLIENT_TEXT_MAX } from "@/lib/clients/form";
 import { isUuid } from "@/lib/catalog/form";
 import { parsePrice } from "@/lib/catalog/values";
 import { createClient } from "@/lib/supabase/server";
 import { formString } from "@/lib/validation";
 import { findOxidant, parseRecipe } from "@/lib/visits/recipe";
 import { fromWarsawLocal } from "@/lib/visits/time";
+import { getAppointment } from "../grafik/data";
+import { getClient } from "../klientki/data";
 import { getProducts } from "../katalog/data";
 import { getVisit } from "./data";
 
@@ -44,7 +47,29 @@ export async function saveVisit(prev: VisitFormState, formData: FormData): Promi
   const parsed = parseRecipe(formString(formData, "recipe"), new Set(products.map((p) => p.id)));
   if (parsed.error !== undefined) return { error: parsed.error };
 
+  const appointmentId = formString(formData, "appointment_id");
+  if (appointmentId && !isUuid(appointmentId)) return { error: "Nie znaleziono terminu." };
+
+  // Alergie „nieuzupełnione”: receptura z farbą dopiero po wyborze (to samo pilnuje trigger w bazie).
+  const client = await getClient(clientId);
+  if (!client) return { error: "Nie znaleziono klientki." };
+  const hasDyes = parsed.recipe.mixes.some((m) => m.items.length > 0);
+  const choice = formString(formData, "allergy_choice");
+  if (client.allergy_status === "unknown" && hasDyes && choice !== "none" && choice !== "has") {
+    return { error: `${ASK_ALLERGIES} – zaznacz „Brak znanych alergii” albo „Są alergie”.`, visitId: prev.visitId };
+  }
+
   const supabase = await createClient();
+  if (client.allergy_status === "unknown" && (choice === "none" || choice === "has")) {
+    const allergies = choice === "has" ? formString(formData, "allergies").trim().slice(0, CLIENT_TEXT_MAX) : "";
+    const { error } = await supabase
+      .from("clients")
+      .update({ allergy_status: choice, allergies })
+      .eq("id", clientId)
+      .is("deleted_at", null);
+    if (error) return { error: "Nie udało się zapisać alergii klientki. Spróbuj ponownie.", visitId: prev.visitId };
+  }
+
   const fields = { service_id: serviceId || null, visit_at: visitAt.toISOString(), price };
   let visitId = id;
 
@@ -78,6 +103,19 @@ export async function saveVisit(prev: VisitFormState, formData: FormData): Promi
   const { error: recipeError } = await supabase.rpc("save_recipe", { p_visit_id: visitId, p_recipe: recipe });
   if (recipeError) {
     return { error: "Wizyta zapisana, ale receptury nie udało się zapisać. Spróbuj ponownie.", visitId };
+  }
+
+  // Wizyta z terminu: powiązanie i status „odbyła się” (termin tej samej klientki, jeszcze bez wizyty).
+  if (appointmentId) {
+    const appointment = await getAppointment(appointmentId);
+    if (appointment && appointment.client_id === clientId && !appointment.visit_id && !appointment.deleted_at) {
+      await supabase
+        .from("appointments")
+        .update({ visit_id: visitId, status: "odbyla_sie" })
+        .eq("id", appointmentId)
+        .is("visit_id", null);
+      revalidatePath("/grafik");
+    }
   }
 
   revalidatePath(`/klientki/${clientId}`);

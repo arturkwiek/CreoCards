@@ -32,14 +32,25 @@ export async function saveClient(_prev: ClientFormState, formData: FormData): Pr
   if (id && !UUID.test(id)) return { error: "Nie znaleziono klientki." };
 
   const values = readClientForm(formData);
-  const result = validateClientForm(values);
+  const supabase = await createClient();
+  const { data: existing } = id
+    ? await supabase
+        .from("clients")
+        .select("allergy_status, rodo_consent_at, notifications_consent_at, photo_consent_at")
+        .eq("id", id)
+        .is("deleted_at", null)
+        .maybeSingle()
+    : { data: null };
+  if (id && !existing) return { values, error: "Nie znaleziono klientki." };
+
+  // „Nieuzupełnione” może zostać tylko u klientki, która już ma ten status (dodana przy rezerwacji terminu).
+  const result = validateClientForm(values, { allowUnknown: existing?.allergy_status === "unknown" });
   if (result.errors) return { values, errors: result.errors };
 
-  const supabase = await createClient();
   const now = new Date().toISOString();
   let clientId = id;
 
-  if (!id) {
+  if (!existing) {
     const { data, error } = await supabase
       .from("clients")
       .insert({
@@ -53,14 +64,6 @@ export async function saveClient(_prev: ClientFormState, formData: FormData): Pr
     if (error || !data) return { values, error: "Nie udało się zapisać klientki. Spróbuj ponownie." };
     clientId = data.id;
   } else {
-    const { data: existing } = await supabase
-      .from("clients")
-      .select("rodo_consent_at, notifications_consent_at, photo_consent_at")
-      .eq("id", id)
-      .is("deleted_at", null)
-      .maybeSingle();
-    if (!existing) return { values, error: "Nie znaleziono klientki." };
-
     const { error } = await supabase
       .from("clients")
       .update({

@@ -1,7 +1,9 @@
 import "server-only";
 import type { AuditEntry, FieldSpec } from "@/lib/audit/history";
+import { ALLERGY_LABELS, isAllergyStatus } from "@/lib/clients/form";
 import { formatPhone } from "@/lib/clients/phone";
 import { formatPrice } from "@/lib/catalog/values";
+import { STATUS_LABELS, type AppointmentStatus } from "@/lib/schedule/day";
 import { formatVisitDate } from "@/lib/visits/time";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,7 +26,7 @@ const consent = (v: unknown) => (typeof v === "string" ? `tak (${formatVisitDate
 export const CLIENT_FIELDS: FieldSpec[] = [
   { key: "full_name", label: "Imię i nazwisko" },
   { key: "phone", label: "Telefon", format: (v) => (typeof v === "string" ? formatPhone(v) : dash(v)) },
-  { key: "allergy_status", label: "Alergie", format: (v) => (v === "has" ? "są alergie / uwagi" : "brak znanych alergii") },
+  { key: "allergy_status", label: "Alergie", format: (v) => (isAllergyStatus(v) ? ALLERGY_LABELS[v] : dash(v)) },
   { key: "allergies", label: "Opis alergii" },
   { key: "email", label: "E-mail" },
   { key: "note", label: "Notatka" },
@@ -39,6 +41,24 @@ export function visitFields(serviceNames: Map<string, string>): FieldSpec[] {
     { key: "service_id", label: "Usługa", format: (v) => (typeof v === "string" ? (serviceNames.get(v) ?? "?") : "—") },
     { key: "visit_at", label: "Data", format: (v) => (typeof v === "string" ? formatVisitDate(v, true) : dash(v)) },
     { key: "price", label: "Cena", format: (v) => (typeof v === "number" ? formatPrice(v) : "—") },
+    { key: "deleted_at", label: "W koszu", format: (v) => (v ? "tak" : "nie") },
+  ];
+}
+
+export function appointmentFields(
+  serviceNames: Map<string, string>,
+  teamNames: Map<string, string>,
+  clientNames: Map<string, string>,
+): FieldSpec[] {
+  const name = (map: Map<string, string>) => (v: unknown) => (typeof v === "string" ? (map.get(v) ?? "?") : "—");
+  return [
+    { key: "starts_at", label: "Termin", format: (v) => (typeof v === "string" ? formatVisitDate(v, true) : dash(v)) },
+    { key: "duration_min", label: "Czas trwania (min)" },
+    { key: "staff_id", label: "Osoba", format: name(teamNames) },
+    { key: "client_id", label: "Klientka", format: name(clientNames) },
+    { key: "service_id", label: "Usługa", format: name(serviceNames) },
+    { key: "status", label: "Status", format: (v) => (typeof v === "string" && v in STATUS_LABELS ? STATUS_LABELS[v as AppointmentStatus] : dash(v)) },
+    { key: "note", label: "Notatka" },
     { key: "deleted_at", label: "W koszu", format: (v) => (v ? "tak" : "nie") },
   ];
 }

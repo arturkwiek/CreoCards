@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { FormMessage, SubmitButton } from "@/components/ui";
+import { ASK_ALLERGIES } from "@/lib/clients/form";
 import { buttonStyles } from "@/components/styles";
 import { filterProducts } from "@/lib/catalog/search";
 import { RATIO_PRESETS, formatNumber, formatRatio, parseRatio, type ProductType } from "@/lib/catalog/values";
@@ -338,9 +339,15 @@ export function VisitForm({
   initial,
   lastRecipe,
   cancelHref,
+  appointmentId,
+  allergyUnknown = false,
 }: {
   clientId: string;
   visitId?: string;
+  /** Wizyta z terminu w grafiku – po zapisie termin dostaje „odbyła się”. */
+  appointmentId?: string;
+  /** Alergie klientki nieuzupełnione – zapis receptury wymaga wyboru. */
+  allergyUnknown?: boolean;
   services: VisitService[];
   /** Bez utleniaczy, posortowane wg użycia. */
   products: VisitProduct[];
@@ -354,6 +361,8 @@ export function VisitForm({
   const [price, setPrice] = useState(initial.price);
   const [note, setNote] = useState(initial.recipe.note);
   const [mixes, setMixes] = useState<EditMix[]>(() => withKeys(initial.recipe.mixes));
+  const [allergyChoice, setAllergyChoice] = useState<"" | "none" | "has">("");
+  const [allergyText, setAllergyText] = useState("");
   const service = services.find((s) => s.id === serviceId);
   const [showRecipe, setShowRecipe] = useState(initial.recipe.mixes.length > 0 || Boolean(service?.with_color));
 
@@ -402,6 +411,8 @@ export function VisitForm({
       <input type="hidden" name="client_id" value={clientId} />
       <input type="hidden" name="service_id" value={serviceId} />
       <input type="hidden" name="recipe" value={recipeJson} />
+      {appointmentId && <input type="hidden" name="appointment_id" value={appointmentId} />}
+      {allergyUnknown && <input type="hidden" name="allergy_choice" value={allergyChoice} />}
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1.5 text-sm font-medium">Usługa</legend>
@@ -527,6 +538,52 @@ export function VisitForm({
           </>
         )}
       </section>
+
+      {allergyUnknown && showRecipe && hasItems && (
+        <fieldset
+          aria-label="Alergie klientki"
+          className="flex flex-col gap-2 rounded-xl border-2 border-red-600 bg-red-50 p-4 text-red-900 dark:bg-red-950 dark:text-red-100"
+        >
+          <legend className="sr-only">Alergie klientki</legend>
+          <p className="font-semibold">⚠ {ASK_ALLERGIES}</p>
+          <p className="text-sm">Zapis receptury wymaga wyboru – zapisze się też na karcie klientki.</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              aria-pressed={allergyChoice === "none"}
+              onClick={() => setAllergyChoice("none")}
+              className={`${chip} ${allergyChoice === "none" ? on : "border-red-600/40 bg-background text-foreground"}`}
+            >
+              Brak znanych alergii
+            </button>
+            <button
+              type="button"
+              aria-pressed={allergyChoice === "has"}
+              onClick={() => setAllergyChoice("has")}
+              className={`${chip} ${allergyChoice === "has" ? "border-red-600 bg-red-600 text-white" : "border-red-600/40 bg-background text-foreground"}`}
+            >
+              Są alergie
+            </button>
+          </div>
+          {allergyChoice === "has" && (
+            <>
+              <label htmlFor="visit-allergies" className="text-sm font-medium">
+                Opis (opcjonalnie)
+              </label>
+              <textarea
+                id="visit-allergies"
+                name="allergies"
+                rows={2}
+                maxLength={2000}
+                placeholder="np. PPD, lateks"
+                value={allergyText}
+                onChange={(e) => setAllergyText(e.target.value)}
+                className="rounded-xl border border-red-600/40 bg-background px-4 py-3 text-base text-foreground"
+              />
+            </>
+          )}
+        </fieldset>
+      )}
 
       <FormMessage error={state.error} />
       <SubmitButton pendingText="Zapisywanie…">{visitId ? "Zapisz zmiany" : "Zapisz wizytę"}</SubmitButton>
