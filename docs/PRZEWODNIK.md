@@ -16,6 +16,11 @@ Zasada: niczego nie trzeba przepisywać na zapas. Aplikacja uczy się salonu prz
 2. Receptura – „Powtórz ostatnią” albo wybierz farby z listy.
 3. Zdjęcie gotowej fryzury – „Zapisz i dodaj zdjęcia”, potem „Zrób zdjęcie”. Brak czasu? Nagraj notatkę głosową – wizyta zapisze się jako szkic.
 
+## Receptura jednym zdaniem
+- W wizycie: „Wpisz lub podyktuj recepturę” i napisz tak jak w zeszycie, np. `9.008, -10g, 8.36-10g, 8.000-10g, 8.21-10g/6%`.
+- Wolisz mówić? Dotknij **mikrofonu na klawiaturze** i powiedz: „dziewięć kropka zero zero osiem, dziesięć gram, osiem trzydzieści sześć, dziesięć gram, … sześć procent”.
+- „Rozpoznaj” pokaże podgląd – sprawdź farby i gramy, potem „Wstaw do receptury” i „Zapisz wizytę”. Kolejna mieszanka – nowa linia (np. „odrost: …”, „długości: …”).
+
 ## Zdjęcia i zgoda klientki
 - Telefon sam zmniejsza zdjęcie i usuwa z niego lokalizację – wysyłka trwa chwilę nawet na słabym Wi-Fi.
 - Klientka bez zgody na zdjęcia? Aplikacja zapyta: **„Bez twarzy (np. tył głowy)”** – zawsze w porządku. **„Z twarzą”** – tylko gdy klientka się zgadza; zgodę wpisz w jej danych („Więcej” → „Zgoda udzielona dziś”).

@@ -52,6 +52,13 @@ Zasada: wszystko poza polami obowiązkowymi uzupełnia się przy okazji, nigdy n
 - Oś czasu klientki: do 3 miniatur na wizytę i licznik „+N”.
 - Eksport danych klientki (RODO): ZIP z arkuszem i wszystkimi jej zdjęciami. Nocny backup obejmuje pliki (osobna, zaszyfrowana kopia).
 
+## Zapis receptury w skrócie (Etap 6a)
+
+- W formularzu wizyty „Wpisz lub podyktuj recepturę”: pole tekstowe na skrócony zapis, np. `9.008, -10g, 8.36-10g, 8.000-10g, 8.21-10g/6%` (odcień-gramy, stężenie utleniacza na końcu). Dyktowanie: mikrofon klawiatury telefonu (Gboard, Samsung) – rozumiane są liczebniki („osiem trzydzieści sześć”), „kropka”, „przecinek”, „gram”, „procent”, „minut”, „jeden do półtora”.
+- Opcjonalnie: strefa („odrost:”, „długości”, „końce”…), proporcja `1:1,5`, czas `35 min`, marka, „bez utleniacza”. Nowa linia lub „;” – kolejna mieszanka.
+- Dopasowanie do katalogu salonu: dokładny odcień (8.000 ≠ 8.0), a gdy brak – te same cyfry („9008” → 9.008). Ten sam odcień w kilku markach: marka z tekstu, potem z ostatniej receptury klientki, potem najczęściej używana – do zmiany w podglądzie.
+- **Podgląd przed wstawieniem** (mieszanki, farby, gramy, utleniacz, proporcja z katalogu, gramy utleniacza) z oznaczonymi założeniami: samotne „-10g” = gramy poprzedniego odcienia, „/6%” = utleniacz całej mieszanki, linia = mieszanka; brak stężenia = 6% (oznaczone). Odcienie spoza katalogu na czerwono („Zgłoś brak”). „Wstaw do receptury” wypełnia formularz (przy istniejącej recepturze: „Zastąp” albo „Dodaj mieszanki”); zapis jak zwykle „Zapisz wizytę”.
+
 ## Receptura koloryzacji
 
 Receptura należy do wizyty, nie do klientki. Składa się z jednej lub kilku mieszanek.

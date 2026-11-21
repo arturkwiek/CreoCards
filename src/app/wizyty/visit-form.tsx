@@ -27,6 +27,7 @@ import {
   type DraftRecipe,
 } from "@/lib/visits/recipe";
 import { saveVisit, type VisitFormState } from "./actions";
+import { RecipeNotation, type InsertMode, type InsertedMix } from "./recipe-notation";
 
 export type VisitProduct = {
   id: string;
@@ -360,6 +361,22 @@ export function VisitForm({
   const productIds = useMemo(() => new Set(products.map((p) => p.id)), [products]);
   const hasItems = mixes.some((m) => m.items.length > 0);
   const repeat = lastRecipe ? copyRecipe(lastRecipe, productIds) : null;
+  // Marki z ostatniej receptury klientki – wybierane, gdy ten sam odcień jest w kilku markach.
+  const preferredBrands = useMemo(
+    () => [...new Set((lastRecipe?.mixes ?? []).flatMap((m) => m.items.map((i) => productsById.get(i.product_id)?.brand ?? "")))].filter(Boolean),
+    [lastRecipe, productsById],
+  );
+
+  const insertNotation = (inserted: InsertedMix[], mode: InsertMode) => {
+    const fresh: EditMix[] = inserted.map(({ ratioGiven, ...m }) => ({
+      ...m,
+      items: m.items.slice(0, MAX_ITEMS),
+      key: nextKey++,
+      ratioTouched: ratioGiven,
+    }));
+    setMixes((all) => (mode === "replace" ? fresh : [...all.filter((m) => m.items.length > 0), ...fresh]).slice(0, MAX_MIXES));
+    setShowRecipe(true);
+  };
 
   const openRecipe = () => {
     setShowRecipe(true);
@@ -449,6 +466,12 @@ export function VisitForm({
 
       <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">Receptura</h2>
+        <RecipeNotation
+          products={products}
+          preferredBrands={preferredBrands}
+          hasItems={hasItems}
+          onInsert={insertNotation}
+        />
         {repeat && repeat.mixes.length > 0 && !hasItems && (
           <button
             type="button"
