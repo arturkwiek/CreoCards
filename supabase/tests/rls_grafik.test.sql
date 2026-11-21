@@ -5,7 +5,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(37);
+select plan(38);
 
 -- Liczba wierszy zmienionych przez polecenie (z RLS osoby wywołującej).
 create function pg_temp.affected(q text) returns int language plpgsql as $$
