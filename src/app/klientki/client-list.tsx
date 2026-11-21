@@ -10,7 +10,7 @@ export type ClientListItem = {
   full_name: string;
   phone: string;
   phone_digits: string;
-  allergy_status: "none" | "has";
+  allergy_status: "none" | "has" | "unknown";
   updated_at: string;
 };
 
@@ -63,6 +63,11 @@ export function ClientList({ clients }: { clients: ClientListItem[] }) {
                 {c.allergy_status === "has" && (
                   <span className="shrink-0 rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white">
                     Alergie
+                  </span>
+                )}
+                {c.allergy_status === "unknown" && (
+                  <span className="shrink-0 rounded-full border border-red-600 px-2.5 py-1 text-xs font-semibold text-red-700 dark:text-red-400">
+                    Alergie?
                   </span>
                 )}
               </Link>

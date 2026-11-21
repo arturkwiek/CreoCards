@@ -5,7 +5,21 @@ import { normalizePhone } from "./phone";
 export const CLIENT_NAME_MAX = 120;
 export const CLIENT_TEXT_MAX = 2000;
 
-export type AllergyStatus = "none" | "has";
+/** none = brak znanych alergii, has = są alergie, unknown = nieuzupełnione (klientka dodana przy rezerwacji terminu). */
+export type AllergyStatus = "none" | "has" | "unknown";
+
+export const ALLERGY_LABELS: Record<AllergyStatus, string> = {
+  none: "brak znanych alergii",
+  has: "są alergie / uwagi",
+  unknown: "nieuzupełnione",
+};
+
+/** Komunikat przy wizycie, gdy alergie są nieuzupełnione. */
+export const ASK_ALLERGIES = "Zapytaj o alergie przed nałożeniem farby";
+
+export function isAllergyStatus(value: unknown): value is AllergyStatus {
+  return value === "none" || value === "has" || value === "unknown";
+}
 
 /** Wartości formularza (to, co wpisała osoba) – zwracane przy błędzie, żeby nic nie zginęło. */
 export type ClientFormValues = {
@@ -57,7 +71,7 @@ export function readClientForm(formData: FormData): ClientFormValues {
   return {
     full_name: text(formData, "full_name"),
     phone: text(formData, "phone"),
-    allergy_status: status === "none" || status === "has" ? status : "",
+    allergy_status: isAllergyStatus(status) ? status : "",
     allergies: text(formData, "allergies"),
     email: text(formData, "email"),
     note: text(formData, "note"),
@@ -67,9 +81,13 @@ export function readClientForm(formData: FormData): ClientFormValues {
   };
 }
 
-/** Obowiązkowe: imię i nazwisko, telefon, wybór alergii. Reszta opcjonalna i nie blokuje zapisu. */
+/**
+ * Obowiązkowe: imię i nazwisko, telefon, wybór alergii. Reszta opcjonalna i nie blokuje zapisu.
+ * „Nieuzupełnione” tylko tam, gdzie dopuszczone (termin w grafiku, klientka, która już ma ten status).
+ */
 export function validateClientForm(
   values: ClientFormValues,
+  { allowUnknown = false }: { allowUnknown?: boolean } = {},
 ): { data: ClientInput; errors?: undefined } | { data?: undefined; errors: ClientFormErrors } {
   const errors: ClientFormErrors = {};
 
@@ -81,7 +99,9 @@ export function validateClientForm(
   if (!values.phone.trim()) errors.phone = "Wpisz numer telefonu.";
   else if (!phone) errors.phone = "Sprawdź numer – np. 600 123 456.";
 
-  if (!values.allergy_status) errors.allergy_status = "Zaznacz, czy klientka ma alergie.";
+  if (!values.allergy_status || (values.allergy_status === "unknown" && !allowUnknown)) {
+    errors.allergy_status = "Zaznacz, czy klientka ma alergie.";
+  }
 
   const allergies = values.allergy_status === "has" ? values.allergies.trim() : "";
   if (allergies.length > CLIENT_TEXT_MAX) errors.allergies = `Najwyżej ${CLIENT_TEXT_MAX} znaków.`;

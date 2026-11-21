@@ -14,6 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          duration_min: number
+          id: string
+          note: string
+          salon_id: string
+          service_id: string | null
+          staff_id: string
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          updated_at: string
+          visit_id: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          duration_min?: number
+          id?: string
+          note?: string
+          salon_id?: string
+          service_id?: string | null
+          staff_id?: string
+          starts_at: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+          visit_id?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          duration_min?: number
+          id?: string
+          note?: string
+          salon_id?: string
+          service_id?: string | null
+          staff_id?: string
+          starts_at?: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_client_id_salon_id_fkey"
+            columns: ["client_id", "salon_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id", "salon_id"]
+          },
+          {
+            foreignKeyName: "appointments_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_service_id_salon_id_fkey"
+            columns: ["service_id", "salon_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id", "salon_id"]
+          },
+          {
+            foreignKeyName: "appointments_staff_id_salon_id_fkey"
+            columns: ["staff_id", "salon_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id", "salon_id"]
+          },
+          {
+            foreignKeyName: "appointments_visit_id_salon_id_fkey"
+            columns: ["visit_id", "salon_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id", "salon_id"]
+          },
+        ]
+      }
       attachments: {
         Row: {
           client_id: string
@@ -828,6 +915,7 @@ export type Database = {
       import_products: { Args: { items: Json }; Returns: Json }
       import_services: { Args: { items: Json }; Returns: Json }
       is_owner: { Args: never; Returns: boolean }
+      is_salon_member: { Args: { p_user_id: string }; Returns: boolean }
       link_salon_name: { Args: { p_token_hash: string }; Returns: string }
       log_export: {
         Args: { p_row_id?: string; p_scope: string }
@@ -856,7 +944,12 @@ export type Database = {
       }
     }
     Enums: {
-      allergy_status: "none" | "has"
+      allergy_status: "none" | "has" | "unknown"
+      appointment_status:
+        | "umowiona"
+        | "odbyla_sie"
+        | "odwolana"
+        | "nie_przyszla"
       attachment_kind: "photo"
       audit_action:
         | "update"
@@ -995,7 +1088,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      allergy_status: ["none", "has"],
+      allergy_status: ["none", "has", "unknown"],
+      appointment_status: [
+        "umowiona",
+        "odbyla_sie",
+        "odwolana",
+        "nie_przyszla",
+      ],
       attachment_kind: ["photo"],
       audit_action: [
         "update",

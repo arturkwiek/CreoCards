@@ -48,6 +48,7 @@ async function EditVisitContent({ params }: { params: PageProps<"/wizyty/[id]/ed
           recipe: recipes.get(visit.id) ?? { note: "", mixes: [] },
         }}
         cancelHref={`/wizyty/${visit.id}`}
+        allergyUnknown={client.allergy_status === "unknown"}
       />
     </>
   );

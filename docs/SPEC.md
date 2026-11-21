@@ -21,7 +21,7 @@ Pola obowiązkowe:
 
 - Imię i nazwisko
 - Telefon
-- Alergie / uwagi zdrowotne (wyraźnie wyróżnione pole)
+- Alergie / uwagi zdrowotne (wyraźnie wyróżnione pole). Wyjątek: klientka dodana przy rezerwacji terminu może mieć status **„nieuzupełnione”** – wtedy ekran nowej wizyty i edycji pokazuje czerwony komunikat „Zapytaj o alergie przed nałożeniem farby”, a zapis wizyty z recepturą (farbą) wymaga wyboru „Brak znanych alergii” lub „Są alergie” (zapisuje się na karcie klientki; pilnuje tego też baza). Termin i wizytę bez receptury można zapisać bez tego.
 
 Pola opcjonalne:
 
@@ -51,6 +51,16 @@ Zasada: wszystko poza polami obowiązkowymi uzupełnia się przy okazji, nigdy n
 - **Usuwanie miękkie**: „Usuń do kosza” – osoba, która może edytować wizytę; przywraca właścicielka (Kosz → Zdjęcia).
 - Oś czasu klientki: do 3 miniatur na wizytę i licznik „+N”.
 - Eksport danych klientki (RODO): ZIP z arkuszem i wszystkimi jej zdjęciami. Nocny backup obejmuje pliki (osobna, zaszyfrowana kopia).
+
+## Grafik (terminy klientek)
+
+- Termin: osoba z zespołu, dzień i godzina (przyciski co 15 min), usługa (z niej czas trwania), czas trwania, klientka z bazy (wyszukiwanie po imieniu lub 3 cyfrach telefonu) albo **nowa klientka** (imię, telefon, alergie – można „Nie wiem – zapytam przy wizycie”), notatka. Status: umówiona, odbyła się, odwołana, nie przyszła.
+- Uczennica dodaje i zmienia tylko swoje terminy; **termin innej osobie dodaje tylko właścicielka**. Grafik zespołu widzą wszyscy (do odczytu), widok „Wszyscy” (kolumna na osobę, osoba bez terminów = „wolna”) – właścicielka.
+- **Mój dzień**: godziny 7:00–21:00 (siatka poszerza się o terminy poza nimi), dotknięcie godziny dodaje termin. Kolizja z innym terminem tej osoby (umówionym lub odbytym) – ostrzeżenie „Nakłada się na…” i „Zapisz mimo to”.
+- **„Nowa wizyta”** z terminu: formularz wizyty z klientką, usługą i godziną terminu; po zapisie termin dostaje „Odbyła się” i powiązanie z wizytą (jedna wizyta – jeden termin).
+- Ekran główny: „Dziś: N terminów, najbliższy GG:MM”; karta klientki: nadchodzące terminy i „Umów termin”.
+- Kosz (zakładka „Terminy”, przywraca właścicielka), historia zmian z przywracaniem wersji, eksport całości (arkusz `terminy`) i danych klientki (arkusz „Terminy”).
+- Później: grafik pracy (kto którego dnia pracuje), widok tygodnia, odczyt zdjęcia papierowego kalendarza (Etap 6b).
 
 ## Zapis receptury w skrócie (Etap 6a)
 
@@ -175,7 +185,6 @@ Przewodnik dla zespołu: `docs/PRZEWODNIK.md`.
 
 - **Finanse**: cena usługi i koszt materiałów zapisywane od początku; raporty, rentowność usług i rozliczenia później.
 - Rozszerzone uprawnienia właścicielki, akceptacja receptur uczennic. (Już w MVP: wizytę edytuje jej autorka lub właścicielka.)
-- Wspólny kalendarz wizyt.
 - Przypomnienia o teście uczuleniowym.
 - Szablony usług.
 - Eksport historii klientki do PDF.

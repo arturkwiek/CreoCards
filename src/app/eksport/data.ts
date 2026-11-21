@@ -1,5 +1,7 @@
 import "server-only";
 import { visibleEmail } from "@/lib/auth/login";
+import { ALLERGY_LABELS } from "@/lib/clients/form";
+import { STATUS_LABELS } from "@/lib/schedule/day";
 import type { Cell, Sheet } from "@/lib/export/xlsx";
 import { createClient } from "@/lib/supabase/server";
 import { ZONE_LABELS, type MixZone } from "@/lib/visits/recipe";
@@ -53,6 +55,7 @@ export async function exportAll(): Promise<Sheet[]> {
     ["uslugi", "services"],
     ["zgloszenia_brakow", "product_requests"],
     ["zdjecia", "attachments"],
+    ["terminy", "appointments"],
   ] as const;
   const sheets: Sheet[] = [];
   for (const [name, table] of tables) sheets.push(sheet(name, await fetchAll(supabase, table)));
@@ -78,7 +81,7 @@ export async function exportClient(clientId: string): Promise<ClientExport | nul
   const { data: client } = await supabase.from("clients").select("*").eq("id", clientId).maybeSingle();
   if (!client) return null;
 
-  const [{ data: visits }, { data: services }, { data: team }, { data: attachments }] = await Promise.all([
+  const [{ data: visits }, { data: services }, { data: team }, { data: attachments }, { data: appointments }] = await Promise.all([
     supabase.from("visits").select("*").eq("client_id", clientId).order("visit_at"),
     supabase.from("services").select("id, name"),
     supabase.from("users").select("id, full_name, login, email"),
@@ -87,6 +90,7 @@ export async function exportClient(clientId: string): Promise<ClientExport | nul
       .select("id, visit_id, storage_path, mime, shows_face, consent_missing, created_by, created_at, deleted_at")
       .eq("client_id", clientId)
       .order("created_at"),
+    supabase.from("appointments").select("*").eq("client_id", clientId).order("starts_at"),
   ]);
   const visitIds = (visits ?? []).map((v) => v.id);
   const { data: recipes } = visitIds.length
@@ -121,7 +125,7 @@ export async function exportClient(clientId: string): Promise<ClientExport | nul
     ["Imię i nazwisko", client.full_name],
     ["Telefon", client.phone],
     ["E-mail", client.email],
-    ["Alergie", client.allergy_status === "has" ? "są alergie / uwagi" : "brak znanych alergii"],
+    ["Alergie", ALLERGY_LABELS[client.allergy_status]],
     ["Opis alergii", client.allergies],
     ["Notatka", client.note],
     ["Zgoda RODO", yesNo(client.rodo_consent_at)],
@@ -178,12 +182,25 @@ export async function exportClient(clientId: string): Promise<ClientExport | nul
       a.deleted_at ? "tak" : "",
     ]);
   }
+  const appointmentRows: Cell[][] = [
+    ["Termin", "Czas (min)", "Osoba", "Usługa", "Status", "Notatka", "W koszu"],
+    ...(appointments ?? []).map((a) => [
+      formatVisitDate(a.starts_at, true),
+      a.duration_min,
+      personName.get(a.staff_id) ?? "",
+      (a.service_id && serviceName.get(a.service_id)) || "",
+      STATUS_LABELS[a.status],
+      a.note,
+      a.deleted_at ? "tak" : "",
+    ]),
+  ];
   return {
     sheets: [
       { name: "Klientka", rows: card },
       { name: "Wizyty", rows: visitRows },
       { name: "Receptury", rows: recipeRows },
       { name: "Zdjęcia", rows: photoRows },
+      { name: "Terminy", rows: appointmentRows },
     ],
     photos,
   };

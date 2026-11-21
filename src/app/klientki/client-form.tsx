@@ -18,6 +18,12 @@ const ALLERGY_OPTIONS: { value: AllergyStatus; label: string; selected: string }
   { value: "none", label: "Brak znanych alergii", selected: "border-brand bg-brand text-white" },
   { value: "has", label: "Są alergie / uwagi", selected: "border-red-600 bg-red-600 text-white" },
 ];
+/** Tylko u klientki dodanej przy rezerwacji terminu (status „nieuzupełnione”). */
+const UNKNOWN_OPTION = {
+  value: "unknown" as const,
+  label: "Nieuzupełnione – zapytam przy wizycie",
+  selected: "border-red-600 bg-red-50 text-red-900 dark:bg-red-950 dark:text-red-100",
+};
 
 function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
@@ -128,7 +134,7 @@ export function ClientForm({
         <legend className="mb-1.5 text-sm font-medium">Alergie / uwagi zdrowotne</legend>
         <input type="hidden" name="allergy_status" value={values.allergy_status} />
         <div className="grid grid-cols-2 gap-2">
-          {ALLERGY_OPTIONS.map((opt) => {
+          {[...ALLERGY_OPTIONS, ...(initial.allergy_status === "unknown" ? [UNKNOWN_OPTION] : [])].map((opt) => {
             const selected = values.allergy_status === opt.value;
             return (
               <button
@@ -138,7 +144,7 @@ export function ClientForm({
                 onClick={() => set("allergy_status", opt.value)}
                 className={`min-h-12 rounded-xl border px-3 py-2 text-base font-medium ${
                   selected ? opt.selected : "border-foreground/20 text-foreground"
-                }`}
+                } ${opt.value === "unknown" ? "col-span-2" : ""}`}
               >
                 {opt.label}
               </button>

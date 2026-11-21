@@ -8,6 +8,8 @@ import { getSession } from "@/lib/auth/session";
 import { greeting, needsFullName } from "@/lib/profile/name";
 import { ROLE_LABELS } from "@/lib/validation";
 import { photosWord } from "@/lib/photos/photo";
+import { isBlocking, timeOf, todayWarsaw } from "@/lib/schedule/day";
+import { getDayAppointments } from "./grafik/data";
 import { countOpenRequests } from "./katalog/data";
 import { countPhotosWithoutConsent } from "./zdjecia/data";
 import { NamePrompt } from "./name-prompt";
@@ -16,6 +18,12 @@ function requestsWord(n: number): string {
   if (n === 1) return "zgłoszenie";
   const tens = n % 100;
   return n % 10 >= 2 && n % 10 <= 4 && (tens < 12 || tens > 14) ? "zgłoszenia" : "zgłoszeń";
+}
+
+function appointmentsWord(n: number): string {
+  if (n === 1) return "termin";
+  const tens = n % 100;
+  return n % 10 >= 2 && n % 10 <= 4 && (tens < 12 || tens > 14) ? "terminy" : "terminów";
 }
 
 async function HomeContent() {
@@ -38,8 +46,13 @@ async function HomeContent() {
 
   const { user } = session;
   // Powiadomienie właścicielki o zgłoszeniach „Zgłoś brak”.
-  const [openRequests, noConsent] =
-    user.role === "owner" ? await Promise.all([countOpenRequests(), countPhotosWithoutConsent()]) : [0, 0];
+  const [[openRequests, noConsent], today] = await Promise.all([
+    user.role === "owner" ? Promise.all([countOpenRequests(), countPhotosWithoutConsent()]) : Promise.resolve([0, 0]),
+    getDayAppointments(todayWarsaw(), user.id),
+  ]);
+  const now = new Date();
+  const todayActive = today.filter((a) => isBlocking(a.status));
+  const next = todayActive.find((a) => a.status === "umowiona" && new Date(a.starts_at) > now);
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -59,6 +72,14 @@ async function HomeContent() {
         </Link>
       )}
 
+      <Link href="/grafik" className={`${buttonStyles.primary} flex-col !h-auto min-h-12 py-2`}>
+        Grafik
+        <span className="text-sm font-normal">
+          {todayActive.length === 0
+            ? "Dziś brak terminów"
+            : `Dziś: ${todayActive.length} ${appointmentsWord(todayActive.length)}${next ? `, najbliższy ${timeOf(next.starts_at)}` : ""}`}
+        </span>
+      </Link>
       <Link href="/klientki" className={buttonStyles.primary}>
         Klientki
       </Link>
