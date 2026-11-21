@@ -113,7 +113,7 @@ alter table public.appointments enable row level security;
 revoke all on public.appointments from anon, authenticated;
 
 grant select on public.appointments to authenticated;
-grant insert (staff_id, client_id, service_id, starts_at, duration_min, note, status) on public.appointments to authenticated;
+grant insert (id, staff_id, client_id, service_id, starts_at, duration_min, note, status) on public.appointments to authenticated;
 grant update (staff_id, client_id, service_id, starts_at, duration_min, note, status, visit_id, deleted_at)
   on public.appointments to authenticated;
 
